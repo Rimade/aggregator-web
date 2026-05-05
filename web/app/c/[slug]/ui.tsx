@@ -160,17 +160,17 @@ export function CafeMenuClient({
   }
 
   return (
-    <div className="min-h-dvh bg-[radial-gradient(900px_500px_at_20%_-50px,rgba(59,130,246,0.20),transparent_70%),radial-gradient(900px_500px_at_90%_0px,rgba(168,85,247,0.16),transparent_55%),linear-gradient(to_bottom,#070a12,rgba(7,10,18,0.96),#050711)]">
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-black/40 backdrop-blur">
+    <div className="min-h-dvh bg-slate-50">
+      <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/85 backdrop-blur">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div className="min-w-0">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-white/10 ring-1 ring-white/15" />
+              <div className="h-10 w-10 rounded-2xl bg-slate-900" />
               <div className="min-w-0">
-                <div className="truncate text-sm font-semibold tracking-wide text-white">
+                <div className="truncate text-sm font-semibold tracking-wide text-slate-900">
                   {cafe.name}
                 </div>
-                <div className="truncate text-xs text-white/60">
+                <div className="truncate text-xs text-slate-500">
                   {tableLabel ?? cafe.subtitle ?? "Меню по QR"}
                 </div>
               </div>
@@ -178,11 +178,11 @@ export function CafeMenuClient({
           </div>
 
           <div className="hidden items-center gap-2 sm:flex">
-            <span className="rounded-full bg-emerald-400/10 px-2 py-1 text-xs text-emerald-200 ring-1 ring-emerald-400/15">
+            <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-700 ring-1 ring-emerald-200">
               Оплата на месте
             </span>
             <Link
-              className="rounded-lg px-3 py-2 text-xs text-white/70 ring-1 ring-white/10 transition hover:bg-white/5 hover:text-white"
+              className="rounded-xl px-3 py-2 text-xs text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900"
               href="/"
             >
               На главную
@@ -203,7 +203,7 @@ export function CafeMenuClient({
                     <h2 className="text-lg font-semibold tracking-tight">
                       {cat.name}
                     </h2>
-                    <div className="text-xs text-white/50">
+                    <div className="text-xs text-slate-500">
                       {cat.items.length} поз.
                     </div>
                   </div>
@@ -211,7 +211,7 @@ export function CafeMenuClient({
                     {cat.items.map((item) => (
                       <article
                         key={item.id}
-                        className="group rounded-2xl bg-white/5 p-4 ring-1 ring-white/10 transition hover:bg-white/7"
+                        className="group rounded-3xl bg-white p-4 ring-1 ring-slate-200 shadow-sm transition hover:shadow-md"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -219,25 +219,25 @@ export function CafeMenuClient({
                               {item.name}
                             </div>
                             {item.description ? (
-                              <div className="mt-1 text-xs leading-5 text-white/65">
+                              <div className="mt-1 text-xs leading-5 text-slate-600">
                                 {item.description}
                               </div>
                             ) : null}
                           </div>
-                          <div className="shrink-0 rounded-full bg-white/6 px-2 py-1 text-xs text-white/80 ring-1 ring-white/10">
-                            {rub(item.priceRub).replace(" ₽", " ₽")}
+                          <div className="shrink-0 rounded-full bg-slate-50 px-2 py-1 text-xs text-slate-700 ring-1 ring-slate-200">
+                            {rub(item.priceRub)}
                           </div>
                         </div>
 
                         <div className="mt-3 flex items-center justify-between">
-                          <div className="text-xs text-white/45">
+                          <div className="text-xs text-slate-500">
                             {item.isAvailable === false ? "Нет в наличии" : " "}
                           </div>
                           <button
                             type="button"
                             onClick={() => addItem(item.id)}
                             disabled={item.isAvailable === false}
-                            className="inline-flex h-9 items-center justify-center rounded-xl bg-white px-3 text-xs font-medium text-slate-950 shadow-sm shadow-black/30 transition hover:bg-white/95 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/60"
+                            className="inline-flex h-9 items-center justify-center rounded-2xl bg-slate-900 px-3 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
                           >
                             Добавить
                           </button>
@@ -250,17 +250,17 @@ export function CafeMenuClient({
             </section>
 
             <aside className="lg:sticky lg:top-24 lg:h-[calc(100dvh-7rem)]">
-              <div className="rounded-3xl bg-white/5 p-5 ring-1 ring-white/10">
+              <div className="rounded-3xl bg-white p-5 ring-1 ring-slate-200 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold">Корзина</div>
-                    <div className="mt-1 text-xs text-white/60">
+                    <div className="mt-1 text-xs text-slate-500">
                       {cart.length
                         ? "Проверь позиции и оформи заказ"
                         : "Добавь что-нибудь вкусное"}
                     </div>
                   </div>
-                  <div className="rounded-full bg-white/6 px-2 py-1 text-xs text-white/70 ring-1 ring-white/10">
+                  <div className="rounded-full bg-slate-50 px-2 py-1 text-xs text-slate-700 ring-1 ring-slate-200">
                     {cartCount}
                   </div>
                 </div>
@@ -270,14 +270,14 @@ export function CafeMenuClient({
                     {cart.map((l) => (
                       <div
                         key={l.itemId}
-                        className="rounded-2xl bg-black/25 p-3 ring-1 ring-white/10"
+                        className="rounded-3xl bg-slate-50 p-3 ring-1 ring-slate-200"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="truncate text-sm font-medium">
                               {l.name}
                             </div>
-                            <div className="mt-0.5 text-xs text-white/55">
+                            <div className="mt-0.5 text-xs text-slate-500">
                               {rub(l.priceRub)} • x{l.qty}
                             </div>
                           </div>
@@ -287,21 +287,21 @@ export function CafeMenuClient({
                         </div>
 
                         <div className="mt-3 flex items-center justify-between">
-                          <div className="inline-flex items-center rounded-xl bg-white/5 ring-1 ring-white/10">
+                          <div className="inline-flex items-center rounded-2xl bg-white ring-1 ring-slate-200">
                             <button
                               type="button"
-                              className="h-9 w-9 rounded-xl text-white/80 transition hover:bg-white/5"
+                              className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
                               onClick={() => decItem(l.itemId)}
                               aria-label="Уменьшить количество"
                             >
                               −
                             </button>
-                            <div className="w-8 text-center text-xs text-white/80">
+                            <div className="w-8 text-center text-xs text-slate-700">
                               {l.qty}
                             </div>
                             <button
                               type="button"
-                              className="h-9 w-9 rounded-xl text-white/80 transition hover:bg-white/5"
+                              className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
                               onClick={() => incItem(l.itemId)}
                               aria-label="Увеличить количество"
                             >
@@ -310,7 +310,7 @@ export function CafeMenuClient({
                           </div>
                           <button
                             type="button"
-                            className="rounded-xl px-3 py-2 text-xs text-white/65 ring-1 ring-white/10 transition hover:bg-white/5 hover:text-white"
+                            className="rounded-2xl px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900"
                             onClick={() =>
                               setCart((prev) =>
                                 prev.filter((x) => x.itemId !== l.itemId),
@@ -325,15 +325,15 @@ export function CafeMenuClient({
                   </div>
                 ) : null}
 
-                <div className="mt-4 rounded-2xl bg-black/30 p-4 ring-1 ring-white/10">
+                <div className="mt-4 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
                   <div className="flex items-end justify-between gap-3">
                     <div>
-                      <div className="text-xs text-white/60">Итого</div>
+                      <div className="text-xs text-slate-500">Итого</div>
                       <div className="mt-1 text-lg font-semibold">
                         {rub(totalRub)}
                       </div>
                     </div>
-                    <div className="rounded-full bg-emerald-400/10 px-2 py-1 text-xs text-emerald-200 ring-1 ring-emerald-400/15">
+                    <div className="rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-700 ring-1 ring-emerald-200">
                       на месте
                     </div>
                   </div>
@@ -355,11 +355,11 @@ export function CafeMenuClient({
                         type="button"
                         disabled={!cart.length}
                         onClick={() => setStep("checkout")}
-                        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm shadow-black/30 transition hover:bg-white/95 disabled:cursor-not-allowed disabled:bg-white/15 disabled:text-white/70"
+                        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
                       >
                         Оформить заказ
                       </button>
-                      <div className="mt-3 text-xs text-white/50">
+                      <div className="mt-3 text-xs text-slate-500">
                         Оплата на месте. После оформления заказ сразу уйдёт в
                         панель кафе.
                       </div>
@@ -400,14 +400,14 @@ function CheckoutForm({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-sm font-semibold">Оформление</div>
-          <div className="mt-1 text-xs text-white/55">
+          <div className="mt-1 text-xs text-slate-500">
             {tableLabel ? tableLabel : "Выбери тип заказа и оставь контакт (опц.)"}
           </div>
         </div>
         <button
           type="button"
           onClick={onBack}
-          className="rounded-xl px-3 py-2 text-xs text-white/70 ring-1 ring-white/10 transition hover:bg-white/5 hover:text-white"
+          className="rounded-2xl px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200 transition hover:bg-white hover:text-slate-900"
         >
           Назад
         </button>
@@ -421,8 +421,8 @@ function CheckoutForm({
           className={[
             "h-10 rounded-2xl text-xs font-medium ring-1 transition",
             value.type === "dine_in"
-              ? "bg-white text-slate-950 ring-white/20"
-              : "bg-white/5 text-white/75 ring-white/10 hover:bg-white/8",
+              ? "bg-slate-900 text-white ring-slate-900"
+              : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50",
             typeLocked ? "cursor-not-allowed opacity-60" : "",
           ].join(" ")}
         >
@@ -435,8 +435,8 @@ function CheckoutForm({
           className={[
             "h-10 rounded-2xl text-xs font-medium ring-1 transition",
             value.type === "pickup"
-              ? "bg-white text-slate-950 ring-white/20"
-              : "bg-white/5 text-white/75 ring-white/10 hover:bg-white/8",
+              ? "bg-slate-900 text-white ring-slate-900"
+              : "bg-white text-slate-700 ring-slate-200 hover:bg-slate-50",
             typeLocked ? "cursor-not-allowed opacity-60" : "",
           ].join(" ")}
         >
@@ -468,11 +468,11 @@ function CheckoutForm({
       <button
         type="button"
         onClick={onSubmit}
-        className="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-semibold text-slate-950 shadow-sm shadow-black/30 transition hover:bg-white/95"
+        className="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
       >
         Подтвердить заказ
       </button>
-      <div className="text-xs text-white/50">
+      <div className="text-xs text-slate-500">
         Оплата — на месте. Фискальный чек выдаст кафе.
       </div>
     </div>
@@ -492,12 +492,12 @@ function Field({
 }) {
   return (
     <label className="block">
-      <div className="mb-1 text-xs text-white/60">{label}</div>
+      <div className="mb-1 text-xs text-slate-600">{label}</div>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-2xl bg-white/5 px-3 text-sm text-white placeholder:text-white/35 ring-1 ring-white/10 outline-none transition focus:ring-white/20"
+        className="h-11 w-full rounded-2xl bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 ring-1 ring-slate-200 outline-none transition focus:ring-slate-300"
       />
     </label>
   );
@@ -512,68 +512,70 @@ function Success({
 }) {
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="rounded-3xl bg-white/5 p-6 ring-1 ring-white/10">
+      <div className="rounded-3xl bg-white p-6 ring-1 ring-slate-200 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-xs text-white/60">Заказ принят</div>
+            <div className="text-xs text-slate-500">Заказ принят</div>
             <div className="mt-1 text-2xl font-semibold tracking-tight">
               {order.orderNumber}
             </div>
-            <div className="mt-2 text-sm text-white/70">{order.cafeName}</div>
-            <div className="mt-1 text-xs text-white/55">
-              Статус: <span className="text-emerald-200">new</span> • Оплата: на
+            <div className="mt-2 text-sm text-slate-600">{order.cafeName}</div>
+            <div className="mt-1 text-xs text-slate-500">
+              Статус: <span className="text-emerald-700">new</span> • Оплата: на
               месте
             </div>
           </div>
           <button
             type="button"
             onClick={onNewOrder}
-            className="rounded-xl bg-white px-3 py-2 text-xs font-medium text-slate-950 shadow-sm shadow-black/30 transition hover:bg-white/95"
+            className="rounded-2xl bg-slate-900 px-3 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
           >
             Новый заказ
           </button>
         </div>
 
-        <div className="mt-5 rounded-2xl bg-black/30 p-4 ring-1 ring-white/10">
+        <div className="mt-5 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
           <div className="text-sm font-semibold">Состав</div>
           <div className="mt-3 space-y-2 text-sm">
             {order.lines.map((l) => (
               <div key={l.itemId} className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <div className="truncate">{l.name}</div>
-                  <div className="text-xs text-white/55">x{l.qty}</div>
+                  <div className="text-xs text-slate-500">x{l.qty}</div>
                 </div>
                 <div className="shrink-0 font-medium">{rub(l.priceRub * l.qty)}</div>
               </div>
             ))}
           </div>
-          <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-sm">
-            <div className="text-white/70">Итого</div>
+          <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-3 text-sm">
+            <div className="text-slate-500">Итого</div>
             <div className="text-base font-semibold">{rub(order.totalRub)}</div>
           </div>
         </div>
 
-        <div className="mt-4 grid gap-2 text-xs text-white/60">
+        <div className="mt-4 grid gap-2 text-xs text-slate-600">
           <div>
             Тип:{" "}
-            <span className="text-white/80">
+            <span className="text-slate-900">
               {order.type === "dine_in" ? "В зале" : "Самовывоз"}
               {order.tableLabel ? ` • ${order.tableLabel}` : ""}
             </span>
           </div>
           {order.customerName ? (
             <div>
-              Имя: <span className="text-white/80">{order.customerName}</span>
+              Имя: <span className="text-slate-900">{order.customerName}</span>
             </div>
           ) : null}
           {order.customerPhone ? (
             <div>
-              Телефон: <span className="text-white/80">{order.customerPhone}</span>
+              Телефон:{" "}
+              <span className="text-slate-900">{order.customerPhone}</span>
             </div>
           ) : null}
           {order.comment ? (
             <div>
-              Комментарий: <span className="text-white/80">{order.comment}</span>
+              Комментарий:{" "}
+              <span className="text-slate-900">{order.comment}</span>
             </div>
           ) : null}
         </div>
