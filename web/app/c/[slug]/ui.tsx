@@ -1,13 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
+import { Input } from "@/components/ui/input";
+import { Sheet } from "@/components/ui/sheet";
 
 type MenuItem = {
   id: string;
   name: string;
   description?: string;
   priceRub: number;
+  image: { kind: "gradient"; a: string; b: string };
   isAvailable?: boolean;
 };
 
@@ -52,6 +57,15 @@ function rub(n: number) {
   return `${n.toLocaleString("ru-RU")} ₽`;
 }
 
+function norm(s: string) {
+  return s
+    .toLowerCase()
+    .replaceAll("ё", "е")
+    .replaceAll(/[^a-zа-я0-9\s-]/g, " ")
+    .replaceAll(/\s+/g, " ")
+    .trim();
+}
+
 function makeOrderNumber() {
   const letters = "ABCDEFGHJKMNPQRSTUVWXYZ";
   const letter = letters[Math.floor(Math.random() * letters.length)];
@@ -69,6 +83,8 @@ export function CafeMenuClient({
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [step, setStep] = useState<"menu" | "checkout" | "success">("menu");
+  const [query, setQuery] = useState("");
+  const [activeCat, setActiveCat] = useState<string>(cafe.categories[0]?.id ?? "");
   const [draft, setDraft] = useState<{
     name: string;
     phone: string;
@@ -90,8 +106,27 @@ export function CafeMenuClient({
     return m;
   }, [cafe.categories]);
 
+  const filteredCafe = useMemo(() => {
+    const q = norm(query);
+    if (!q) return cafe;
+    const outCats: MenuCategory[] = [];
+    for (const cat of cafe.categories) {
+      const items = cat.items.filter((i) => {
+        const hay = norm(`${i.name} ${i.description ?? ""}`);
+        return hay.includes(q);
+      });
+      if (items.length) outCats.push({ ...cat, items });
+    }
+    return { ...cafe, categories: outCats };
+  }, [cafe, query]);
+
   const cartCount = cart.reduce((acc, l) => acc + l.qty, 0);
   const totalRub = cart.reduce((acc, l) => acc + l.priceRub * l.qty, 0);
+  const catsForUi = query ? filteredCafe.categories : cafe.categories;
+  const effectiveActiveCat =
+    activeCat && catsForUi.some((c) => c.id === activeCat)
+      ? activeCat
+      : (catsForUi[0]?.id ?? "");
 
   function addItem(itemId: string) {
     const item = itemIndex.get(itemId);
@@ -164,92 +199,177 @@ export function CafeMenuClient({
 
   return (
     <div className="min-h-dvh bg-slate-50">
-      <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/85 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-slate-900" />
-              <div className="min-w-0">
-                <div className="truncate text-sm font-semibold tracking-wide text-slate-900">
-                  {cafe.name}
-                </div>
-                <div className="truncate text-xs text-slate-500">
-                  {tableLabel ?? cafe.subtitle ?? "Меню по QR"}
+      <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/92 backdrop-blur">
+        <div className="mx-auto w-full max-w-6xl px-4 pb-3 pt-3 sm:px-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-slate-900" />
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold tracking-wide text-slate-900">
+                    {cafe.name}
+                  </div>
+                  <div className="truncate text-xs text-slate-500">
+                    {tableLabel ?? cafe.subtitle ?? "Меню по QR"}
+                  </div>
                 </div>
               </div>
             </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="hidden rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 sm:inline-flex">
+                Оплата на месте
+              </span>
+              <Link
+                className="hidden rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900 sm:inline-flex"
+                href="/"
+              >
+                На главную
+              </Link>
+              <button
+                type="button"
+                onClick={() => setCartOpen(true)}
+                className="inline-flex h-10 items-center gap-2 rounded-2xl bg-slate-900 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              >
+                Корзина
+                <span className="rounded-full bg-white/12 px-2 py-1 text-[11px] font-semibold">
+                  {cartCount}
+                </span>
+              </button>
+            </div>
           </div>
 
-          <div className="hidden items-center gap-2 sm:flex">
-            <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-700 ring-1 ring-emerald-200">
-              Оплата на месте
-            </span>
-            <Link
-              className="rounded-xl px-3 py-2 text-xs text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900"
-              href="/"
-            >
-              На главную
-            </Link>
+          <div className="mt-3">
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Найти в меню…"
+              className="h-12 rounded-3xl bg-slate-50 ring-slate-200"
+            />
+          </div>
+
+          <div className="mt-3 -mx-4 flex gap-2 overflow-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+            {catsForUi.map((cat) => (
+              <Chip
+                key={cat.id}
+                active={effectiveActiveCat === cat.id}
+                onClick={() => {
+                  setActiveCat(cat.id);
+                  const el = document.getElementById(`cat-${cat.id}`);
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                {cat.name}
+              </Chip>
+            ))}
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-32 pt-6 sm:px-6 sm:pt-8">
+      <main className="mx-auto w-full max-w-6xl px-4 pb-32 pt-4 sm:px-6 sm:pt-6">
         {step === "success" && submitted ? (
           <Success order={submitted} onNewOrder={reset} />
         ) : (
           <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
             <section className="space-y-6">
-              {cafe.categories.map((cat) => (
-                <div key={cat.id} className="space-y-3">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h2 className="text-lg font-semibold tracking-tight">
-                      {cat.name}
-                    </h2>
-                    <div className="text-xs text-slate-500">
-                      {cat.items.length} поз.
+              {catsForUi.map((cat) => (
+                <div key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-36">
+                  <div className="sticky top-[128px] z-10 -mx-4 bg-slate-50/92 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h2 className="text-base font-semibold tracking-tight text-slate-900">
+                        {cat.name}
+                      </h2>
+                      <div className="text-xs text-slate-500">
+                        {cat.items.length} поз.
+                      </div>
                     </div>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {cat.items.map((item) => (
-                      <article
-                        key={item.id}
-                        className="group rounded-3xl bg-white p-4 ring-1 ring-slate-200 shadow-sm transition hover:shadow-md"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-semibold">
-                              {item.name}
-                            </div>
-                            {item.description ? (
-                              <div className="mt-1 text-xs leading-5 text-slate-600">
-                                {item.description}
-                              </div>
-                            ) : null}
-                          </div>
-                          <div className="shrink-0 rounded-full bg-slate-50 px-2 py-1 text-xs text-slate-700 ring-1 ring-slate-200">
-                            {rub(item.priceRub)}
-                          </div>
-                        </div>
 
-                        <div className="mt-3 flex items-center justify-between">
-                          <div className="text-xs text-slate-500">
-                            {item.isAvailable === false ? "Нет в наличии" : " "}
+                  <div className="mt-2 divide-y divide-slate-200 rounded-3xl bg-white ring-1 ring-slate-200">
+                    {cat.items.map((item) => {
+                      const line = cart.find((l) => l.itemId === item.id);
+                      return (
+                        <div key={item.id} className="p-4">
+                          <div className="flex items-start gap-3">
+                            <div
+                              className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl ring-1 ring-slate-200"
+                              style={{
+                                background: `linear-gradient(135deg, ${item.image.a}, ${item.image.b})`,
+                              }}
+                              aria-label={`Фото: ${item.name}`}
+                              title={item.name}
+                            />
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <div className="truncate text-sm font-semibold text-slate-900">
+                                    {item.name}
+                                  </div>
+                                  {item.description ? (
+                                    <div className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">
+                                      {item.description}
+                                    </div>
+                                  ) : null}
+                                </div>
+                                <div className="shrink-0 text-sm font-semibold text-slate-900">
+                                  {rub(item.priceRub)}
+                                </div>
+                              </div>
+
+                              <div className="mt-3 flex items-center justify-between">
+                                <div className="text-xs text-slate-500">
+                                  {item.isAvailable === false
+                                    ? "Нет в наличии"
+                                    : " "}
+                                </div>
+
+                                {line ? (
+                                  <div className="inline-flex items-center rounded-2xl bg-white ring-1 ring-slate-200">
+                                    <button
+                                      type="button"
+                                      className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
+                                      onClick={() => decItem(item.id)}
+                                      aria-label="Уменьшить количество"
+                                    >
+                                      −
+                                    </button>
+                                    <div className="w-8 text-center text-xs font-semibold text-slate-900">
+                                      {line.qty}
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
+                                      onClick={() => incItem(item.id)}
+                                      aria-label="Увеличить количество"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => addItem(item.id)}
+                                    disabled={item.isAvailable === false}
+                                  >
+                                    Добавить
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => addItem(item.id)}
-                            disabled={item.isAvailable === false}
-                            className="inline-flex h-9 items-center justify-center rounded-2xl bg-slate-900 px-3 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
-                          >
-                            Добавить
-                          </button>
                         </div>
-                      </article>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ))}
+
+              {query && filteredCafe.categories.length === 0 ? (
+                <div className="rounded-3xl bg-white p-5 text-sm text-slate-600 ring-1 ring-slate-200">
+                  Ничего не найдено. Попробуй другой запрос.
+                </div>
+              ) : null}
             </section>
 
             <aside className="lg:sticky lg:top-24 lg:h-[calc(100dvh-7rem)]">
@@ -354,14 +474,14 @@ export function CafeMenuClient({
                     </div>
                   ) : (
                     <>
-                      <button
+                      <Button
                         type="button"
                         disabled={!cart.length}
                         onClick={() => setStep("checkout")}
-                        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+                        className="mt-4 w-full"
                       >
                         Оформить заказ
-                      </button>
+                      </Button>
                       <div className="mt-3 text-xs text-slate-500">
                         Оплата на месте. После оформления заказ сразу уйдёт в
                         панель кафе.
@@ -392,142 +512,112 @@ export function CafeMenuClient({
             </span>
           </button>
 
-          {cartOpen ? (
-            <div
-              className="fixed inset-0 z-40"
-              role="dialog"
-              aria-modal="true"
-            >
-              <button
-                type="button"
-                className="absolute inset-0 bg-black/20"
-                onClick={() => setCartOpen(false)}
-                aria-label="Закрыть"
-              />
-              <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-auto rounded-t-3xl bg-white p-4 ring-1 ring-slate-200">
-                <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
-                <div className="mt-3 flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold">Корзина</div>
-                    <div className="mt-1 text-xs text-slate-500">
-                      {cart.length ? "Проверь позиции и оформи заказ" : "Пусто"}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setCartOpen(false)}
-                    className="rounded-xl px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900"
+          <Sheet
+            open={cartOpen}
+            onClose={() => setCartOpen(false)}
+            title="Корзина"
+            description={cart.length ? "Проверь позиции и оформи заказ" : "Пусто"}
+          >
+            {cart.length ? (
+              <div className="space-y-2">
+                {cart.map((l) => (
+                  <div
+                    key={l.itemId}
+                    className="rounded-3xl bg-slate-50 p-3 ring-1 ring-slate-200"
                   >
-                    Закрыть
-                  </button>
-                </div>
-
-                {cart.length ? (
-                  <div className="mt-4 space-y-2">
-                    {cart.map((l) => (
-                      <div
-                        key={l.itemId}
-                        className="rounded-3xl bg-slate-50 p-3 ring-1 ring-slate-200"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-medium">
-                              {l.name}
-                            </div>
-                            <div className="mt-0.5 text-xs text-slate-500">
-                              {rub(l.priceRub)} • x{l.qty}
-                            </div>
-                          </div>
-                          <div className="shrink-0 text-sm font-semibold">
-                            {rub(l.priceRub * l.qty)}
-                          </div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">
+                          {l.name}
                         </div>
-
-                        <div className="mt-3 flex items-center justify-between">
-                          <div className="inline-flex items-center rounded-2xl bg-white ring-1 ring-slate-200">
-                            <button
-                              type="button"
-                              className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
-                              onClick={() => decItem(l.itemId)}
-                              aria-label="Уменьшить количество"
-                            >
-                              −
-                            </button>
-                            <div className="w-8 text-center text-xs text-slate-700">
-                              {l.qty}
-                            </div>
-                            <button
-                              type="button"
-                              className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
-                              onClick={() => incItem(l.itemId)}
-                              aria-label="Увеличить количество"
-                            >
-                              +
-                            </button>
-                          </div>
-                          <button
-                            type="button"
-                            className="rounded-2xl px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900"
-                            onClick={() =>
-                              setCart((prev) =>
-                                prev.filter((x) => x.itemId !== l.itemId),
-                              )
-                            }
-                          >
-                            Удалить
-                          </button>
+                        <div className="mt-0.5 text-xs text-slate-500">
+                          {rub(l.priceRub)} • x{l.qty}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : null}
-
-                <div className="mt-4 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                  <div className="flex items-end justify-between gap-3">
-                    <div>
-                      <div className="text-xs text-slate-500">Итого</div>
-                      <div className="mt-1 text-lg font-semibold">
-                        {rub(totalRub)}
+                      <div className="shrink-0 text-sm font-semibold">
+                        {rub(l.priceRub * l.qty)}
                       </div>
                     </div>
-                    <div className="rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-700 ring-1 ring-emerald-200">
-                      на месте
-                    </div>
-                  </div>
 
-                  {step === "checkout" ? (
-                    <div className="mt-4">
-                      <CheckoutForm
-                        tableLabel={tableLabel}
-                        typeLocked={!!tableLabel}
-                        value={draft}
-                        onChange={setDraft}
-                        onBack={() => setStep("menu")}
-                        onSubmit={submitOrder}
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        disabled={!cart.length}
-                        onClick={() => setStep("checkout")}
-                        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+                    <div className="mt-3 flex items-center justify-between">
+                      <div className="inline-flex items-center rounded-2xl bg-white ring-1 ring-slate-200">
+                        <button
+                          type="button"
+                          className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
+                          onClick={() => decItem(l.itemId)}
+                          aria-label="Уменьшить количество"
+                        >
+                          −
+                        </button>
+                        <div className="w-8 text-center text-xs text-slate-700">
+                          {l.qty}
+                        </div>
+                        <button
+                          type="button"
+                          className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
+                          onClick={() => incItem(l.itemId)}
+                          aria-label="Увеличить количество"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                          setCart((prev) =>
+                            prev.filter((x) => x.itemId !== l.itemId),
+                          )
+                        }
                       >
-                        Оформить заказ
-                      </button>
-                      <div className="mt-3 text-xs text-slate-500">
-                        Оплата на месте. После оформления заказ сразу уйдёт в
-                        панель кафе.
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                <div className="h-6" />
+                        Удалить
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
+            ) : null}
+
+            <div className="mt-4 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <div className="text-xs text-slate-500">Итого</div>
+                  <div className="mt-1 text-lg font-semibold">{rub(totalRub)}</div>
+                </div>
+                <div className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                  на месте
+                </div>
+              </div>
+
+              {step === "checkout" ? (
+                <div className="mt-4">
+                  <CheckoutForm
+                    tableLabel={tableLabel}
+                    typeLocked={!!tableLabel}
+                    value={draft}
+                    onChange={setDraft}
+                    onBack={() => setStep("menu")}
+                    onSubmit={submitOrder}
+                  />
+                </div>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    disabled={!cart.length}
+                    onClick={() => setStep("checkout")}
+                    className="mt-4 w-full"
+                  >
+                    Оформить заказ
+                  </Button>
+                  <div className="mt-3 text-xs text-slate-500">
+                    Оплата на месте. После оформления заказ сразу уйдёт в панель
+                    кафе.
+                  </div>
+                </>
+              )}
             </div>
-          ) : null}
+          </Sheet>
         </div>
       ) : null}
     </div>
@@ -563,13 +653,9 @@ function CheckoutForm({
             {tableLabel ? tableLabel : "Выбери тип заказа и оставь контакт (опц.)"}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-2xl px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200 transition hover:bg-white hover:text-slate-900"
-        >
+        <Button variant="secondary" size="sm" type="button" onClick={onBack}>
           Назад
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -624,13 +710,9 @@ function CheckoutForm({
         />
       </div>
 
-      <button
-        type="button"
-        onClick={onSubmit}
-        className="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-      >
+      <Button type="button" onClick={onSubmit} className="w-full">
         Подтвердить заказ
-      </button>
+      </Button>
       <div className="text-xs text-slate-500">
         Оплата — на месте. Фискальный чек выдаст кафе.
       </div>
@@ -652,11 +734,10 @@ function Field({
   return (
     <label className="block">
       <div className="mb-1 text-xs text-slate-600">{label}</div>
-      <input
+      <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-2xl bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 ring-1 ring-slate-200 outline-none transition focus:ring-slate-300"
       />
     </label>
   );
@@ -687,7 +768,7 @@ function Success({
           <button
             type="button"
             onClick={onNewOrder}
-            className="rounded-2xl bg-slate-900 px-3 py-2 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
+            className="rounded-2xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800"
           >
             Новый заказ
           </button>

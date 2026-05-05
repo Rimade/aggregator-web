@@ -6,6 +6,7 @@ type MenuItem = {
   name: string;
   description?: string;
   priceRub: number;
+  image: { kind: "gradient"; a: string; b: string };
   isAvailable?: boolean;
 };
 
@@ -38,12 +39,14 @@ const demoCafe: Cafe = {
           name: "Классический бургер",
           description: "Говядина, сыр, соус, салат, томат.",
           priceRub: 390,
+          image: { kind: "gradient", a: "#34d399", b: "#22c55e" },
         },
         {
           id: "burger-chicken",
           name: "Чикен бургер",
           description: "Курица, сыр, огурчик, соус.",
           priceRub: 360,
+          image: { kind: "gradient", a: "#fbbf24", b: "#fb7185" },
         },
       ],
     },
@@ -56,12 +59,14 @@ const demoCafe: Cafe = {
           name: "Картофель фри",
           description: "Хрустящий, 150 г.",
           priceRub: 160,
+          image: { kind: "gradient", a: "#60a5fa", b: "#a78bfa" },
         },
         {
           id: "nuggets",
           name: "Наггетсы",
           description: "6 шт. + соус на выбор.",
           priceRub: 210,
+          image: { kind: "gradient", a: "#fb7185", b: "#f59e0b" },
         },
       ],
     },
@@ -69,8 +74,20 @@ const demoCafe: Cafe = {
       id: "cat-drinks",
       name: "Напитки",
       items: [
-        { id: "lemonade", name: "Лимонад", description: "0.4 л.", priceRub: 180 },
-        { id: "cola", name: "Кола", description: "0.5 л.", priceRub: 170 },
+        {
+          id: "lemonade",
+          name: "Лимонад",
+          description: "0.4 л.",
+          priceRub: 180,
+          image: { kind: "gradient", a: "#22c55e", b: "#38bdf8" },
+        },
+        {
+          id: "cola",
+          name: "Кола",
+          description: "0.5 л.",
+          priceRub: 170,
+          image: { kind: "gradient", a: "#0ea5e9", b: "#6366f1" },
+        },
       ],
     },
   ],
