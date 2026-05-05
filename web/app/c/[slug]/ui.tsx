@@ -11,6 +11,8 @@ type MenuItem = {
   id: string;
   name: string;
   description?: string;
+  ingredients: string[];
+  tags: Array<"spicy" | "vegan" | "hit">;
   priceRub: number;
   image: { kind: "gradient"; a: string; b: string };
   isAvailable?: boolean;
@@ -84,6 +86,13 @@ export function CafeMenuClient({
   const [cartOpen, setCartOpen] = useState(false);
   const [step, setStep] = useState<"menu" | "checkout" | "success">("menu");
   const [query, setQuery] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+  const [tagHit, setTagHit] = useState(false);
+  const [tagVegan, setTagVegan] = useState(false);
+  const [tagSpicy, setTagSpicy] = useState(false);
+  const [ingredient, setIngredient] = useState<string>("");
   const [activeCat, setActiveCat] = useState<string>(cafe.categories[0]?.id ?? "");
   const [draft, setDraft] = useState<{
     name: string;
@@ -108,21 +117,44 @@ export function CafeMenuClient({
 
   const filteredCafe = useMemo(() => {
     const q = norm(query);
-    if (!q) return cafe;
+    const iQ = norm(ingredient);
+    const min = Number(priceMin);
+    const max = Number(priceMax);
+    const hasMin = priceMin.trim() !== "" && Number.isFinite(min);
+    const hasMax = priceMax.trim() !== "" && Number.isFinite(max);
+
     const outCats: MenuCategory[] = [];
     for (const cat of cafe.categories) {
       const items = cat.items.filter((i) => {
         const hay = norm(`${i.name} ${i.description ?? ""}`);
-        return hay.includes(q);
+        if (q && !hay.includes(q)) return false;
+        if (hasMin && i.priceRub < min) return false;
+        if (hasMax && i.priceRub > max) return false;
+        if (tagHit && !i.tags.includes("hit")) return false;
+        if (tagVegan && !i.tags.includes("vegan")) return false;
+        if (tagSpicy && !i.tags.includes("spicy")) return false;
+        if (iQ) {
+          const ing = i.ingredients.map(norm);
+          if (!ing.some((x) => x.includes(iQ))) return false;
+        }
+        return true;
       });
       if (items.length) outCats.push({ ...cat, items });
     }
     return { ...cafe, categories: outCats };
-  }, [cafe, query]);
+  }, [cafe, ingredient, priceMax, priceMin, query, tagHit, tagSpicy, tagVegan]);
 
   const cartCount = cart.reduce((acc, l) => acc + l.qty, 0);
   const totalRub = cart.reduce((acc, l) => acc + l.priceRub * l.qty, 0);
-  const catsForUi = query ? filteredCafe.categories : cafe.categories;
+  const anyFilter =
+    !!norm(query) ||
+    !!norm(ingredient) ||
+    priceMin.trim() !== "" ||
+    priceMax.trim() !== "" ||
+    tagHit ||
+    tagVegan ||
+    tagSpicy;
+  const catsForUi = anyFilter ? filteredCafe.categories : cafe.categories;
   const effectiveActiveCat =
     activeCat && catsForUi.some((c) => c.id === activeCat)
       ? activeCat
@@ -239,13 +271,21 @@ export function CafeMenuClient({
             </div>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-3 flex gap-2">
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Найти в меню…"
-              className="h-12 rounded-3xl bg-slate-50 ring-slate-200"
+              className="h-12 flex-1 rounded-3xl bg-slate-50 ring-slate-200"
             />
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-12 shrink-0 rounded-3xl px-4"
+              onClick={() => setFiltersOpen(true)}
+            >
+              Фильтры
+            </Button>
           </div>
 
           <div className="mt-3 -mx-4 flex gap-2 overflow-auto px-4 pb-1 sm:-mx-6 sm:px-6">
@@ -311,6 +351,25 @@ export function CafeMenuClient({
                                       {item.description}
                                     </div>
                                   ) : null}
+                                  {item.tags.length ? (
+                                    <div className="mt-2 flex flex-wrap gap-1.5">
+                                      {item.tags.includes("hit") ? (
+                                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                                          хит
+                                        </span>
+                                      ) : null}
+                                      {item.tags.includes("vegan") ? (
+                                        <span className="rounded-full bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-700 ring-1 ring-slate-200">
+                                          🌱
+                                        </span>
+                                      ) : null}
+                                      {item.tags.includes("spicy") ? (
+                                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200">
+                                          🌶️
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                  ) : null}
                                 </div>
                                 <div className="shrink-0 text-sm font-semibold text-slate-900">
                                   {rub(item.priceRub)}
@@ -367,7 +426,7 @@ export function CafeMenuClient({
 
               {query && filteredCafe.categories.length === 0 ? (
                 <div className="rounded-3xl bg-white p-5 text-sm text-slate-600 ring-1 ring-slate-200">
-                  Ничего не найдено. Попробуй другой запрос.
+                  Ничего не найдено. Попробуй изменить фильтры или запрос.
                 </div>
               ) : null}
             </section>
@@ -620,6 +679,83 @@ export function CafeMenuClient({
           </Sheet>
         </div>
       ) : null}
+
+      <Sheet
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title="Фильтрация"
+        description="Как в доставках: теги, цена, ингредиенты"
+      >
+        <div className="space-y-4">
+          <div>
+            <div className="text-xs font-semibold text-slate-700">
+              Цена (₽)
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <Input
+                inputMode="numeric"
+                placeholder="от"
+                value={priceMin}
+                onChange={(e) => setPriceMin(e.target.value)}
+              />
+              <Input
+                inputMode="numeric"
+                placeholder="до"
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-semibold text-slate-700">Теги</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Chip active={tagHit} onClick={() => setTagHit((v) => !v)}>
+                Хит
+              </Chip>
+              <Chip active={tagVegan} onClick={() => setTagVegan((v) => !v)}>
+                🌱 Веган
+              </Chip>
+              <Chip active={tagSpicy} onClick={() => setTagSpicy((v) => !v)}>
+                🌶️ Острое
+              </Chip>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-semibold text-slate-700">
+              Ингредиент
+            </div>
+            <div className="mt-2">
+              <Input
+                placeholder="например: сыр"
+                value={ingredient}
+                onChange={(e) => setIngredient(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => {
+                setPriceMin("");
+                setPriceMax("");
+                setTagHit(false);
+                setTagVegan(false);
+                setTagSpicy(false);
+                setIngredient("");
+              }}
+            >
+              Сброс
+            </Button>
+            <Button type="button" onClick={() => setFiltersOpen(false)}>
+              Готово
+            </Button>
+          </div>
+        </div>
+      </Sheet>
     </div>
   );
 }
