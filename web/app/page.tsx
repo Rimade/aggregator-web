@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="min-h-dvh bg-[radial-gradient(1200px_600px_at_50%_-100px,rgba(59,130,246,0.25),transparent_70%),radial-gradient(900px_500px_at_10%_0px,rgba(168,85,247,0.18),transparent_55%),linear-gradient(to_bottom,#0b1020,rgba(11,16,32,0.92),#070a12)] text-white">
@@ -12,18 +14,18 @@ export default function Home() {
           </div>
         </div>
         <nav className="flex items-center gap-2 text-sm">
-          <a
+          <Link
             className="rounded-lg px-3 py-2 text-white/80 ring-1 ring-transparent transition hover:bg-white/5 hover:text-white hover:ring-white/10"
             href="/c/demo"
           >
             Демо-витрина
-          </a>
-          <a
+          </Link>
+          <Link
             className="rounded-lg bg-white px-3 py-2 font-medium text-slate-950 shadow-sm shadow-black/20 transition hover:bg-white/95"
             href="/admin"
           >
             Войти в админку
-          </a>
+          </Link>
         </nav>
       </header>
 
@@ -43,18 +45,18 @@ export default function Home() {
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <a
+              <Link
                 href="/c/demo"
                 className="inline-flex h-11 items-center justify-center rounded-xl bg-white px-4 text-sm font-medium text-slate-950 shadow-sm shadow-black/30 transition hover:bg-white/95"
               >
                 Открыть демо-витрину
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/admin"
                 className="inline-flex h-11 items-center justify-center rounded-xl bg-white/5 px-4 text-sm font-medium text-white ring-1 ring-white/12 transition hover:bg-white/8"
               >
                 Перейти в админку
-              </a>
+              </Link>
             </div>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
