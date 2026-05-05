@@ -67,6 +67,7 @@ export function CafeMenuClient({
   tableLabel?: string;
 }) {
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
   const [step, setStep] = useState<"menu" | "checkout" | "success">("menu");
   const [draft, setDraft] = useState<{
     name: string;
@@ -127,6 +128,7 @@ export function CafeMenuClient({
 
   function reset() {
     setCart([]);
+    setCartOpen(false);
     setStep("menu");
     setSubmitted(null);
     setDraft((d) => ({
@@ -156,6 +158,7 @@ export function CafeMenuClient({
     };
     setSubmitted(order);
     setCart([]);
+    setCartOpen(false);
     setStep("success");
   }
 
@@ -191,7 +194,7 @@ export function CafeMenuClient({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 pb-24 pt-8 sm:px-6">
+      <main className="mx-auto w-full max-w-6xl px-4 pb-32 pt-6 sm:px-6 sm:pt-8">
         {step === "success" && submitted ? (
           <Success order={submitted} onNewOrder={reset} />
         ) : (
@@ -371,6 +374,162 @@ export function CafeMenuClient({
           </div>
         )}
       </main>
+
+      {step !== "success" ? (
+        <div className="lg:hidden">
+          <button
+            type="button"
+            onClick={() => setCartOpen(true)}
+            className="fixed inset-x-4 bottom-4 z-30 flex h-12 items-center justify-between rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-lg shadow-slate-900/15 disabled:opacity-60"
+            disabled={!cartCount}
+          >
+            <span>Корзина</span>
+            <span className="flex items-center gap-2">
+              <span className="rounded-full bg-white/12 px-2 py-1 text-xs font-semibold">
+                {cartCount}
+              </span>
+              <span>{rub(totalRub)}</span>
+            </span>
+          </button>
+
+          {cartOpen ? (
+            <div
+              className="fixed inset-0 z-40"
+              role="dialog"
+              aria-modal="true"
+            >
+              <button
+                type="button"
+                className="absolute inset-0 bg-black/20"
+                onClick={() => setCartOpen(false)}
+                aria-label="Закрыть"
+              />
+              <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-auto rounded-t-3xl bg-white p-4 ring-1 ring-slate-200">
+                <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
+                <div className="mt-3 flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold">Корзина</div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      {cart.length ? "Проверь позиции и оформи заказ" : "Пусто"}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCartOpen(false)}
+                    className="rounded-xl px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    Закрыть
+                  </button>
+                </div>
+
+                {cart.length ? (
+                  <div className="mt-4 space-y-2">
+                    {cart.map((l) => (
+                      <div
+                        key={l.itemId}
+                        className="rounded-3xl bg-slate-50 p-3 ring-1 ring-slate-200"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium">
+                              {l.name}
+                            </div>
+                            <div className="mt-0.5 text-xs text-slate-500">
+                              {rub(l.priceRub)} • x{l.qty}
+                            </div>
+                          </div>
+                          <div className="shrink-0 text-sm font-semibold">
+                            {rub(l.priceRub * l.qty)}
+                          </div>
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="inline-flex items-center rounded-2xl bg-white ring-1 ring-slate-200">
+                            <button
+                              type="button"
+                              className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
+                              onClick={() => decItem(l.itemId)}
+                              aria-label="Уменьшить количество"
+                            >
+                              −
+                            </button>
+                            <div className="w-8 text-center text-xs text-slate-700">
+                              {l.qty}
+                            </div>
+                            <button
+                              type="button"
+                              className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
+                              onClick={() => incItem(l.itemId)}
+                              aria-label="Увеличить количество"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            className="rounded-2xl px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900"
+                            onClick={() =>
+                              setCart((prev) =>
+                                prev.filter((x) => x.itemId !== l.itemId),
+                              )
+                            }
+                          >
+                            Удалить
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                <div className="mt-4 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <div className="text-xs text-slate-500">Итого</div>
+                      <div className="mt-1 text-lg font-semibold">
+                        {rub(totalRub)}
+                      </div>
+                    </div>
+                    <div className="rounded-full bg-emerald-50 px-2 py-1 text-xs text-emerald-700 ring-1 ring-emerald-200">
+                      на месте
+                    </div>
+                  </div>
+
+                  {step === "checkout" ? (
+                    <div className="mt-4">
+                      <CheckoutForm
+                        tableLabel={tableLabel}
+                        typeLocked={!!tableLabel}
+                        value={draft}
+                        onChange={setDraft}
+                        onBack={() => setStep("menu")}
+                        onSubmit={submitOrder}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        disabled={!cart.length}
+                        onClick={() => setStep("checkout")}
+                        className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+                      >
+                        Оформить заказ
+                      </button>
+                      <div className="mt-3 text-xs text-slate-500">
+                        Оплата на месте. После оформления заказ сразу уйдёт в
+                        панель кафе.
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="h-6" />
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
