@@ -5,6 +5,24 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 First, run the development server:
 
 ```bash
+npm install
+npm run dev
+```
+
+### Supabase
+
+1) Create `web/.env.local` from `web/.env.local.example` and set:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+2) In Supabase SQL Editor run `supabase/schema.sql`.
+
+3) Create a `platform_admin` user and profile row in `public.profiles` (we’ll add a helper script later).
+
+Then start the app:
+
+```bash
 npm run dev
 # or
 yarn dev
