@@ -310,7 +310,92 @@ export function CafeMenuClient({
         {step === "success" && submitted ? (
           <Success order={submitted} onNewOrder={reset} />
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+          <div className="grid gap-6 lg:grid-cols-[280px_1fr_360px]">
+            <aside className="hidden lg:block">
+              <div className="sticky top-[120px] rounded-3xl bg-white p-4 ring-1 ring-slate-200 shadow-sm">
+                <div className="text-sm font-semibold text-slate-900">
+                  Фильтрация
+                </div>
+                <div className="mt-1 text-xs text-slate-500">
+                  Цена, теги, ингредиенты
+                </div>
+
+                <div className="mt-4 space-y-4">
+                  <div>
+                    <div className="text-xs font-semibold text-slate-700">
+                      Цена (₽)
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <Input
+                        inputMode="numeric"
+                        placeholder="от"
+                        value={priceMin}
+                        onChange={(e) => setPriceMin(e.target.value)}
+                      />
+                      <Input
+                        inputMode="numeric"
+                        placeholder="до"
+                        value={priceMax}
+                        onChange={(e) => setPriceMax(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-semibold text-slate-700">
+                      Теги
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Chip active={tagHit} onClick={() => setTagHit((v) => !v)}>
+                        Хит
+                      </Chip>
+                      <Chip
+                        active={tagVegan}
+                        onClick={() => setTagVegan((v) => !v)}
+                      >
+                        🌱 Веган
+                      </Chip>
+                      <Chip
+                        active={tagSpicy}
+                        onClick={() => setTagSpicy((v) => !v)}
+                      >
+                        🌶️ Острое
+                      </Chip>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-semibold text-slate-700">
+                      Ингредиент
+                    </div>
+                    <div className="mt-2">
+                      <Input
+                        placeholder="например: сыр"
+                        value={ingredient}
+                        onChange={(e) => setIngredient(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    className="w-full"
+                    onClick={() => {
+                      setPriceMin("");
+                      setPriceMax("");
+                      setTagHit(false);
+                      setTagVegan(false);
+                      setTagSpicy(false);
+                      setIngredient("");
+                    }}
+                  >
+                    Сбросить
+                  </Button>
+                </div>
+              </div>
+            </aside>
+
             <section className="space-y-6">
               {catsForUi.map((cat) => (
                 <div key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-36">
@@ -325,99 +410,84 @@ export function CafeMenuClient({
                     </div>
                   </div>
 
-                  <div className="mt-2 divide-y divide-slate-200 rounded-3xl bg-white ring-1 ring-slate-200">
+                  <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
                     {cat.items.map((item) => {
                       const line = cart.find((l) => l.itemId === item.id);
                       return (
-                        <div key={item.id} className="p-4">
-                          <div className="flex items-start gap-3">
+                        <article
+                          key={item.id}
+                          className="rounded-3xl bg-white p-4 ring-1 ring-slate-200 shadow-sm transition hover:shadow-md"
+                        >
+                          <div className="relative overflow-hidden rounded-3xl bg-slate-50 ring-1 ring-slate-200">
                             <div
-                              className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl ring-1 ring-slate-200"
+                              className="aspect-square w-full"
                               style={{
-                                background: `linear-gradient(135deg, ${item.image.a}, ${item.image.b})`,
+                                background: `radial-gradient(70% 70% at 50% 35%, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%), linear-gradient(135deg, ${item.image.a}, ${item.image.b})`,
                               }}
                               aria-label={`Фото: ${item.name}`}
                               title={item.name}
                             />
-
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0">
-                                  <div className="truncate text-sm font-semibold text-slate-900">
-                                    {item.name}
-                                  </div>
-                                  {item.description ? (
-                                    <div className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">
-                                      {item.description}
-                                    </div>
-                                  ) : null}
-                                  {item.tags.length ? (
-                                    <div className="mt-2 flex flex-wrap gap-1.5">
-                                      {item.tags.includes("hit") ? (
-                                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                                          хит
-                                        </span>
-                                      ) : null}
-                                      {item.tags.includes("vegan") ? (
-                                        <span className="rounded-full bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-700 ring-1 ring-slate-200">
-                                          🌱
-                                        </span>
-                                      ) : null}
-                                      {item.tags.includes("spicy") ? (
-                                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 ring-1 ring-amber-200">
-                                          🌶️
-                                        </span>
-                                      ) : null}
-                                    </div>
-                                  ) : null}
-                                </div>
-                                <div className="shrink-0 text-sm font-semibold text-slate-900">
-                                  {rub(item.priceRub)}
-                                </div>
+                            {item.tags.includes("hit") ? (
+                              <div className="absolute right-3 top-3 rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200">
+                                Новинка
                               </div>
-
-                              <div className="mt-3 flex items-center justify-between">
-                                <div className="text-xs text-slate-500">
-                                  {item.isAvailable === false
-                                    ? "Нет в наличии"
-                                    : " "}
-                                </div>
-
-                                {line ? (
-                                  <div className="inline-flex items-center rounded-2xl bg-white ring-1 ring-slate-200">
-                                    <button
-                                      type="button"
-                                      className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
-                                      onClick={() => decItem(item.id)}
-                                      aria-label="Уменьшить количество"
-                                    >
-                                      −
-                                    </button>
-                                    <div className="w-8 text-center text-xs font-semibold text-slate-900">
-                                      {line.qty}
-                                    </div>
-                                    <button
-                                      type="button"
-                                      className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
-                                      onClick={() => incItem(item.id)}
-                                      aria-label="Увеличить количество"
-                                    >
-                                      +
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => addItem(item.id)}
-                                    disabled={item.isAvailable === false}
-                                  >
-                                    Добавить
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
+                            ) : null}
                           </div>
-                        </div>
+
+                          <div className="mt-3 text-sm font-semibold text-slate-900">
+                            {item.name}
+                          </div>
+                          {item.description ? (
+                            <div className="mt-1 line-clamp-3 text-xs leading-5 text-slate-600">
+                              {item.description}
+                            </div>
+                          ) : null}
+
+                          <div className="mt-4 flex items-center justify-between gap-3">
+                            <div className="text-sm font-semibold text-slate-900">
+                              от {rub(item.priceRub)}
+                            </div>
+
+                            {line ? (
+                              <div className="inline-flex items-center rounded-2xl bg-white ring-1 ring-slate-200">
+                                <button
+                                  type="button"
+                                  className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
+                                  onClick={() => decItem(item.id)}
+                                  aria-label="Уменьшить количество"
+                                >
+                                  −
+                                </button>
+                                <div className="w-8 text-center text-xs font-semibold text-slate-900">
+                                  {line.qty}
+                                </div>
+                                <button
+                                  type="button"
+                                  className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-slate-50"
+                                  onClick={() => incItem(item.id)}
+                                  aria-label="Увеличить количество"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => addItem(item.id)}
+                                disabled={item.isAvailable === false}
+                                className="rounded-2xl bg-orange-500 text-white hover:bg-orange-400"
+                              >
+                                + Выбрать
+                              </Button>
+                            )}
+                          </div>
+
+                          {item.isAvailable === false ? (
+                            <div className="mt-2 text-xs text-slate-500">
+                              Нет в наличии
+                            </div>
+                          ) : null}
+                        </article>
                       );
                     })}
                   </div>
