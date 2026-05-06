@@ -773,11 +773,11 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 					open={cartOpen}
 					onClose={() => setCartOpen(false)}
 					header={
-						<div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+						<div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3 -mx-4 px-4">
 							<button
 								type="button"
 								onClick={() => setCartOpen(false)}
-								className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50"
+								className="flex h-10 w-10 items-center justify-center rounded-xl text-3xl text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50"
 								aria-label="Закрыть">
 								×
 							</button>

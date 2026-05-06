@@ -38,30 +38,37 @@ export function Sheet({
 				onClick={onClose}
 				aria-label="Закрыть"
 			/>
-			<div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-auto rounded-t-3xl bg-white p-4 ring-1 ring-slate-200">
-				<div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
-				{header ? (
-					<div className="mt-3">{header}</div>
-				) : title || description ? (
-					<div className="mt-3 flex items-start justify-between gap-3">
-						<div>
-							{title ? <div className="text-sm font-semibold">{title}</div> : null}
-							{description ? (
-								<div className="mt-1 text-xs text-slate-500">{description}</div>
-							) : null}
+			<div className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col overflow-hidden rounded-t-3xl bg-white shadow-[0_-8px_32px_rgba(15,23,42,0.12)] ring-1 ring-slate-200">
+				<div className="shrink-0 bg-white px-4 pt-2 shadow-[0_8px_16px_-8px_rgba(15,23,42,0.12)]">
+					<div className="mx-auto h-1.5 w-12 shrink-0 rounded-full bg-slate-200" />
+					{header ? (
+						<div className="mt-3">{header}</div>
+					) : title || description ? (
+						<div className="mt-3 flex items-start justify-between gap-3 pb-3">
+							<div>
+								{title ? <div className="text-sm font-semibold">{title}</div> : null}
+								{description ? (
+									<div className="mt-1 text-xs text-slate-500">{description}</div>
+								) : null}
+							</div>
+							<button
+								type="button"
+								onClick={onClose}
+								className={cn(
+									'rounded-xl px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900',
+								)}>
+								Закрыть
+							</button>
 						</div>
-						<button
-							type="button"
-							onClick={onClose}
-							className={cn(
-								'rounded-xl px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900',
-							)}>
-							Закрыть
-						</button>
-					</div>
-				) : null}
-				<div className={header || title || description ? 'mt-4' : 'mt-2'}>{children}</div>
-				<div className="h-6" />
+					) : null}
+				</div>
+				<div
+					className={cn(
+						'min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]',
+						header || title || description ? 'pt-4' : 'pt-2',
+					)}>
+					{children}
+				</div>
 			</div>
 		</div>
 	);
