@@ -92,6 +92,56 @@ function makeOrderNumber() {
 	return String(Math.floor(100 + Math.random() * 900));
 }
 
+function menuItemHasDetails(item: MenuItem) {
+	return Boolean(item.description?.trim()) || item.ingredients.length > 0;
+}
+
+function ChevronDown({ className }: { className?: string }) {
+	return (
+		<svg
+			className={className}
+			width="18"
+			height="18"
+			viewBox="0 0 24 24"
+			fill="none"
+			xmlns="http://www.w3.org/2000/svg"
+			aria-hidden>
+			<path
+				d="M6 9l6 6 6-6"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+			/>
+		</svg>
+	);
+}
+
+function MenuItemDetailsPanel({ item, open }: { item: MenuItem; open: boolean }) {
+	if (!menuItemHasDetails(item)) return null;
+	return (
+		<div
+			className={cn(
+				'grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none',
+				open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
+			)}>
+			<div className="min-h-0 overflow-hidden">
+				<div className="space-y-2 border-t border-slate-100 bg-slate-50/90 px-3 pb-3 pt-2.5 text-xs leading-relaxed text-slate-600">
+					{item.description?.trim() ? (
+						<p className="text-slate-700">{item.description.trim()}</p>
+					) : null}
+					{item.ingredients.length > 0 ? (
+						<p>
+							<span className="font-semibold text-slate-800">Состав: </span>
+							{item.ingredients.join(' · ')}
+						</p>
+					) : null}
+				</div>
+			</div>
+		</div>
+	);
+}
+
 function CartIcon({ className }: { className?: string }) {
 	return (
 		<svg
@@ -128,6 +178,7 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 	const [tagSpicy, setTagSpicy] = useState(false);
 	const [ingredient, setIngredient] = useState<string>('');
 	const [menuTab, setMenuTab] = useState<'all' | string>('all');
+	const [expandedMenuIds, setExpandedMenuIds] = useState<Set<string>>(() => new Set());
 	const [draft, setDraft] = useState<{
 		name: string;
 		phone: string;
@@ -197,6 +248,15 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 		if (displayTab === 'all') return catsForUi;
 		return catsForUi.filter((c) => c.id === displayTab);
 	}, [catsForUi, displayTab]);
+
+	function toggleMenuItemExpand(itemId: string) {
+		setExpandedMenuIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(itemId)) next.delete(itemId);
+			else next.add(itemId);
+			return next;
+		});
+	}
 
 	function addItem(itemId: string) {
 		const item = itemIndex.get(itemId);
@@ -474,55 +534,87 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 								.flatMap((c) => c.items)
 								.map((item) => {
 									const line = cart.find((l) => l.itemId === item.id);
+									const expanded = expandedMenuIds.has(item.id);
+									const canExpand = menuItemHasDetails(item);
 									return (
 										<article
 											key={item.id}
-											className="flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-slate-200/90 shadow-sm">
-											<div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-2xl">
-												{item.emoji}
-											</div>
-											<div className="min-w-0 flex-1">
-												<div className="text-sm font-bold leading-tight text-slate-900">
-													{item.name}
-												</div>
-												<div className={cn('mt-0.5 text-sm font-semibold', brand.text)}>
-													{rub(item.priceRub)}
-												</div>
-											</div>
-											{line ? (
-												<div className="inline-flex shrink-0 items-center rounded-2xl bg-slate-100 ring-1 ring-slate-200/80">
-													<button
-														type="button"
-														className="h-10 w-10 rounded-2xl text-lg text-slate-700 transition hover:bg-white/80"
-														onClick={() => decItem(item.id)}
-														aria-label="Меньше">
-														−
-													</button>
-													<div className="w-7 text-center text-xs font-bold text-slate-900">
-														{line.qty}
-													</div>
-													<button
-														type="button"
-														className="h-10 w-10 rounded-2xl text-lg text-slate-700 transition hover:bg-white/80"
-														onClick={() => incItem(item.id)}
-														aria-label="Больше">
-														+
-													</button>
-												</div>
-											) : (
+											className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/90 shadow-sm">
+											<div className="flex items-center gap-3 p-3">
 												<button
 													type="button"
-													disabled={item.isAvailable === false}
-													onClick={() => addItem(item.id)}
+													disabled={!canExpand}
+													onClick={() => canExpand && toggleMenuItemExpand(item.id)}
 													className={cn(
-														'flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl font-semibold text-white shadow-md transition disabled:opacity-40',
-														brand.bg,
-														brand.bgHover,
+														'flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left transition',
+														canExpand ? 'active:bg-slate-50/80' : 'cursor-default',
 													)}
-													aria-label="В корзину">
-													+
+													aria-expanded={canExpand ? expanded : undefined}>
+													<div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-2xl">
+														{item.emoji}
+													</div>
+													<div className="min-w-0 flex-1">
+														<div className="flex items-start gap-1">
+															<div className="min-w-0 flex-1">
+																<div className="text-sm font-bold leading-tight text-slate-900">
+																	{item.name}
+																</div>
+																<div className={cn('mt-0.5 text-sm font-semibold', brand.text)}>
+																	{rub(item.priceRub)}
+																</div>
+															</div>
+															{canExpand ? (
+																<ChevronDown
+																	className={cn(
+																		'shrink-0 text-slate-400 transition-transform duration-300 ease-out motion-reduce:transition-none',
+																		expanded && '-rotate-180',
+																	)}
+																/>
+															) : null}
+														</div>
+													</div>
 												</button>
-											)}
+												<div
+													className="shrink-0"
+													onClick={(e) => e.stopPropagation()}
+													onKeyDown={(e) => e.stopPropagation()}>
+													{line ? (
+														<div className="inline-flex items-center rounded-2xl bg-slate-100 ring-1 ring-slate-200/80">
+															<button
+																type="button"
+																className="h-10 w-10 rounded-2xl text-lg text-slate-700 transition hover:bg-white/80"
+																onClick={() => decItem(item.id)}
+																aria-label="Меньше">
+																−
+															</button>
+															<div className="w-7 text-center text-xs font-bold text-slate-900">
+																{line.qty}
+															</div>
+															<button
+																type="button"
+																className="h-10 w-10 rounded-2xl text-lg text-slate-700 transition hover:bg-white/80"
+																onClick={() => incItem(item.id)}
+																aria-label="Больше">
+																+
+															</button>
+														</div>
+													) : (
+														<button
+															type="button"
+															disabled={item.isAvailable === false}
+															onClick={() => addItem(item.id)}
+															className={cn(
+																'flex h-11 w-11 items-center justify-center rounded-full text-xl font-semibold text-white shadow-md transition disabled:opacity-40',
+																brand.bg,
+																brand.bgHover,
+															)}
+															aria-label="В корзину">
+															+
+														</button>
+													)}
+												</div>
+											</div>
+											<MenuItemDetailsPanel item={item} open={expanded && canExpand} />
 										</article>
 									);
 								})}
@@ -544,36 +636,72 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 									<div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
 										{cat.items.map((item) => {
 											const line = cart.find((l) => l.itemId === item.id);
+											const expanded = expandedMenuIds.has(item.id);
+											const canExpand = menuItemHasDetails(item);
 											return (
 												<article
 													key={item.id}
-													className="rounded-3xl bg-white p-4 ring-1 ring-slate-200 shadow-sm transition hover:shadow-md">
-													<div className="relative overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200">
-														<div
-															className="aspect-square w-full"
-															style={{
-																background: `radial-gradient(70% 70% at 50% 35%, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%), linear-gradient(135deg, ${item.image.a}, ${item.image.b})`,
-															}}
-															aria-label={`Фото: ${item.name}`}
-														/>
-														<div className="absolute bottom-2 left-2 flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-xl shadow-sm">
-															{item.emoji}
+													className="overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm transition hover:shadow-md">
+													<div className="p-4">
+														<div className="relative overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200">
+															<button
+																type="button"
+																disabled={!canExpand}
+																onClick={() => canExpand && toggleMenuItemExpand(item.id)}
+																className={cn(
+																	'relative block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#637cf0]/40',
+																	canExpand && 'cursor-pointer',
+																)}
+																aria-expanded={canExpand ? expanded : undefined}
+																aria-label={
+																	canExpand
+																		? expanded
+																			? 'Скрыть описание'
+																			: 'Показать описание и состав'
+																		: undefined
+																}>
+																<div
+																	className="aspect-square w-full"
+																	style={{
+																		background: `radial-gradient(70% 70% at 50% 35%, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%), linear-gradient(135deg, ${item.image.a}, ${item.image.b})`,
+																	}}
+																	aria-hidden
+																/>
+																<div className="absolute bottom-2 left-2 flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-xl shadow-sm">
+																	{item.emoji}
+																</div>
+																{item.tags.includes('hit') ? (
+																	<div className="absolute right-3 top-3 rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200">
+																		Хит
+																	</div>
+																) : null}
+															</button>
 														</div>
-														{item.tags.includes('hit') ? (
-															<div className="absolute right-3 top-3 rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200">
-																Хит
-															</div>
-														) : null}
+
+														<button
+															type="button"
+															disabled={!canExpand}
+															onClick={() => canExpand && toggleMenuItemExpand(item.id)}
+															className={cn(
+																'mt-3 flex w-full items-start justify-between gap-2 rounded-lg text-left transition hover:bg-slate-50/80',
+																!canExpand && 'cursor-default hover:bg-transparent',
+															)}
+															aria-expanded={canExpand ? expanded : undefined}>
+															<span className="text-sm font-bold text-slate-900">{item.name}</span>
+															{canExpand ? (
+																<ChevronDown
+																	className={cn(
+																		'shrink-0 text-slate-400 transition-transform duration-300 ease-out motion-reduce:transition-none',
+																		expanded && 'rotate-180',
+																	)}
+																/>
+															) : null}
+														</button>
 													</div>
 
-													<div className="mt-3 text-sm font-bold text-slate-900">{item.name}</div>
-													{item.description ? (
-														<div className="mt-1 line-clamp-3 text-xs leading-5 text-slate-600">
-															{item.description}
-														</div>
-													) : null}
+													<MenuItemDetailsPanel item={item} open={expanded && canExpand} />
 
-													<div className="mt-4 flex items-center justify-between gap-3">
+													<div className="flex items-center justify-between gap-3 px-4 pb-4 pt-0">
 														<div className={cn('text-sm font-bold', brand.text)}>
 															{rub(item.priceRub)}
 														</div>
@@ -583,7 +711,10 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 																<button
 																	type="button"
 																	className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-white"
-																	onClick={() => decItem(item.id)}
+																	onClick={(e) => {
+																		e.stopPropagation();
+																		decItem(item.id);
+																	}}
 																	aria-label="Уменьшить">
 																	−
 																</button>
@@ -593,7 +724,10 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 																<button
 																	type="button"
 																	className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-white"
-																	onClick={() => incItem(item.id)}
+																	onClick={(e) => {
+																		e.stopPropagation();
+																		incItem(item.id);
+																	}}
 																	aria-label="Увеличить">
 																	+
 																</button>
@@ -601,7 +735,10 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 														) : (
 															<Button
 																size="sm"
-																onClick={() => addItem(item.id)}
+																onClick={(e) => {
+																	e.stopPropagation();
+																	addItem(item.id);
+																}}
 																disabled={item.isAvailable === false}
 																className={cn(
 																	'rounded-2xl text-white shadow-sm',
@@ -614,7 +751,7 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 													</div>
 
 													{item.isAvailable === false ? (
-														<div className="mt-2 text-xs text-slate-500">Нет в наличии</div>
+														<div className="px-4 pb-3 text-xs text-slate-500">Нет в наличии</div>
 													) : null}
 												</article>
 											);
