@@ -56,10 +56,9 @@ type OrderDraft = {
 	cafeName: string;
 	createdAtIso: string;
 	orderNumber: string;
-	type: 'dine_in' | 'pickup';
+	/** Для QR-витрины заказ всегда в зале */
+	type: 'dine_in';
 	tableLabel?: string;
-	customerName?: string;
-	customerPhone?: string;
 	comment?: string;
 	lines: CartLine[];
 	totalRub: number;
@@ -179,16 +178,8 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 	const [ingredient, setIngredient] = useState<string>('');
 	const [menuTab, setMenuTab] = useState<'all' | string>('all');
 	const [expandedMenuIds, setExpandedMenuIds] = useState<Set<string>>(() => new Set());
-	const [draft, setDraft] = useState<{
-		name: string;
-		phone: string;
-		comment: string;
-		type: 'dine_in' | 'pickup';
-	}>(() => ({
-		name: '',
-		phone: '',
+	const [draft, setDraft] = useState<{ comment: string }>(() => ({
 		comment: '',
-		type: tableLabel ? 'dine_in' : 'pickup',
 	}));
 	const [submitted, setSubmitted] = useState<OrderDraft | null>(null);
 
@@ -292,12 +283,7 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 		setCartOpen(false);
 		setStep('menu');
 		setSubmitted(null);
-		setDraft((d) => ({
-			name: '',
-			phone: '',
-			comment: '',
-			type: tableLabel ? 'dine_in' : d.type,
-		}));
+		setDraft({ comment: '' });
 	}
 
 	function submitOrder() {
@@ -307,10 +293,8 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 			cafeName: cafe.name,
 			createdAtIso: new Date().toISOString(),
 			orderNumber: makeOrderNumber(),
-			type: tableLabel ? 'dine_in' : draft.type,
+			type: 'dine_in',
 			tableLabel,
-			customerName: draft.name.trim() || undefined,
-			customerPhone: draft.phone.trim() || undefined,
 			comment: draft.comment.trim() || undefined,
 			lines: cart,
 			totalRub,
@@ -854,7 +838,6 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 									<div className="mt-4">
 										<CheckoutForm
 											tableLabel={tableLabel}
-											typeLocked={!!tableLabel}
 											value={draft}
 											onChange={setDraft}
 											onBack={() => setStep('menu')}
@@ -981,7 +964,6 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 						{step === 'checkout' ? (
 							<CheckoutForm
 								tableLabel={tableLabel}
-								typeLocked={!!tableLabel}
 								value={draft}
 								onChange={setDraft}
 								onBack={() => setStep('menu')}
@@ -1093,27 +1075,25 @@ function CheckoutForm({
 	onBack,
 	onSubmit,
 	tableLabel,
-	typeLocked,
 }: {
-	value: { name: string; phone: string; comment: string; type: 'dine_in' | 'pickup' };
-	onChange: (v: {
-		name: string;
-		phone: string;
-		comment: string;
-		type: 'dine_in' | 'pickup';
-	}) => void;
+	value: { comment: string };
+	onChange: (v: { comment: string }) => void;
 	onBack: () => void;
 	onSubmit: () => void;
 	tableLabel?: string;
-	typeLocked: boolean;
 }) {
+	const tableHint = formatTablePill(tableLabel);
 	return (
 		<div className="space-y-3">
 			<div className="flex items-start justify-between gap-3">
 				<div>
 					<div className="text-sm font-bold">Оформление</div>
 					<div className="mt-1 text-xs text-slate-500">
-						{tableLabel ? tableLabel : 'Тип заказа и контакт (по желанию)'}
+						{tableHint ? (
+							<>{tableHint} · заказ в зале</>
+						) : (
+							<>Заказ в зале — комментарий для кухни по желанию</>
+						)}
 					</div>
 				</div>
 				<Button variant="secondary" size="sm" type="button" onClick={onBack}>
@@ -1121,55 +1101,12 @@ function CheckoutForm({
 				</Button>
 			</div>
 
-			<div className="grid grid-cols-2 gap-2">
-				<button
-					type="button"
-					disabled={typeLocked}
-					onClick={() => onChange({ ...value, type: 'dine_in' })}
-					className={cn(
-						'h-10 rounded-2xl text-xs font-semibold ring-1 transition',
-						value.type === 'dine_in'
-							? 'bg-[#637cf0] text-white ring-[#637cf0]'
-							: 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50',
-						typeLocked && 'cursor-not-allowed opacity-60',
-					)}>
-					В зале
-				</button>
-				<button
-					type="button"
-					disabled={typeLocked}
-					onClick={() => onChange({ ...value, type: 'pickup' })}
-					className={cn(
-						'h-10 rounded-2xl text-xs font-semibold ring-1 transition',
-						value.type === 'pickup'
-							? 'bg-[#637cf0] text-white ring-[#637cf0]'
-							: 'bg-white text-slate-700 ring-slate-200 hover:bg-slate-50',
-						typeLocked && 'cursor-not-allowed opacity-60',
-					)}>
-					Самовывоз
-				</button>
-			</div>
-
-			<div className="grid gap-2">
-				<Field
-					label="Имя (опционально)"
-					value={value.name}
-					onChange={(v) => onChange({ ...value, name: v })}
-					placeholder="Например: Анна"
-				/>
-				<Field
-					label="Телефон (опционально)"
-					value={value.phone}
-					onChange={(v) => onChange({ ...value, phone: v })}
-					placeholder="+7 ..."
-				/>
-				<Field
-					label="Комментарий (опционально)"
-					value={value.comment}
-					onChange={(v) => onChange({ ...value, comment: v })}
-					placeholder="Например: без лука"
-				/>
-			</div>
+			<Field
+				label="Комментарий (опционально)"
+				value={value.comment}
+				onChange={(v) => onChange({ ...value, comment: v })}
+				placeholder="Например: без лука, соус отдельно"
+			/>
 
 			<Button
 				type="button"
@@ -1177,7 +1114,9 @@ function CheckoutForm({
 				className="w-full bg-[#637cf0] text-white hover:bg-[#5568d8]">
 				Подтвердить заказ
 			</Button>
-			<div className="text-xs text-slate-500">Оплата — на месте или СБП. Чек выдаст кафе.</div>
+			<div className="text-center text-xs text-slate-500">
+				Оплата — на месте или СБП. Чек выдаст кафе.
+			</div>
 		</div>
 	);
 }
