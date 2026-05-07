@@ -622,7 +622,7 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 	return (
 		<div className="min-h-dvh bg-[#f5f5f7]">
 			<header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
-				<div className="mx-auto w-full max-w-6xl px-4 pb-3 pt-3 sm:px-6">
+				<div className="mx-auto w-full max-w-7xl px-4 pb-3 pt-3 sm:px-6">
 					{/* Мобильная шапка: как в макете */}
 					<div className="lg:hidden">
 						<div className="text-center">
@@ -751,7 +751,7 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 				</div>
 			</header>
 
-			<main className="mx-auto w-full max-w-6xl px-4 pb-28 pt-4 sm:px-6 sm:pb-32 sm:pt-6 lg:pb-10">
+			<main className="mx-auto w-full max-w-7xl px-4 pb-28 pt-4 sm:px-6 sm:pb-32 sm:pt-6 lg:pb-10">
 				<div className="grid gap-6 lg:grid-cols-[280px_1fr_360px]">
 					<aside className="hidden lg:block">
 						<div className="sticky top-[120px] rounded-3xl bg-white p-4 ring-1 ring-slate-200 shadow-sm">

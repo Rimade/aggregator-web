@@ -167,7 +167,7 @@ export default function AdminDemoPage() {
 	return (
 		<div className="min-h-dvh bg-slate-50">
 			<header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/85 backdrop-blur">
-				<div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
+				<div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-6 py-4">
 					<div className="min-w-0">
 						<div className="text-xs text-slate-500">Панель</div>
 						<div className="truncate text-sm font-semibold text-slate-900">Заказы</div>
@@ -201,7 +201,7 @@ export default function AdminDemoPage() {
 				</div>
 			</header>
 
-			<main className="mx-auto w-full max-w-6xl px-6 pb-16 pt-8">
+			<main className="mx-auto w-full max-w-7xl px-6 pb-16 pt-8">
 				{error ? (
 					<div className="mb-6 rounded-2xl bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
 						{error}

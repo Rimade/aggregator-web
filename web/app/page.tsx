@@ -4,7 +4,7 @@ export default function Home() {
 	return (
 		<div className="min-h-dvh bg-white">
 			<header className="border-b border-slate-200/70 bg-white/80 backdrop-blur">
-				<div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6 sm:py-5">
+				<div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-6 sm:py-5">
 					<div className="flex items-center gap-3">
 						<div className="h-9 w-9 rounded-2xl bg-slate-900" />
 						<div className="leading-tight">
@@ -27,7 +27,7 @@ export default function Home() {
 				</div>
 			</header>
 
-			<main className="mx-auto w-full max-w-6xl px-4 pb-14 pt-8 sm:px-6 sm:pb-16 sm:pt-10">
+			<main className="mx-auto w-full max-w-7xl px-4 pb-14 pt-8 sm:px-6 sm:pb-16 sm:pt-10">
 				<section className="grid items-center gap-10 lg:grid-cols-2">
 					<div>
 						<div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-xs text-slate-600 ring-1 ring-slate-200">
