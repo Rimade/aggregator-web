@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { Fragment, memo, useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { Input } from '@/components/ui/input';
@@ -164,6 +164,230 @@ function CartIcon({ className }: { className?: string }) {
 	);
 }
 
+const MobileMenuItemRow = memo(function MobileMenuItemRow({
+	item,
+	line,
+	expanded,
+	canExpand,
+	onToggleExpand,
+	onAdd,
+	onDec,
+	onInc,
+}: {
+	item: MenuItem;
+	line?: CartLine;
+	expanded: boolean;
+	canExpand: boolean;
+	onToggleExpand: (itemId: string) => void;
+	onAdd: (itemId: string) => void;
+	onDec: (itemId: string) => void;
+	onInc: (itemId: string) => void;
+}) {
+	return (
+		<article className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/90 shadow-sm [content-visibility:auto] [contain-intrinsic-size:120px]">
+			<div className="flex items-center gap-3 p-3">
+				<button
+					type="button"
+					disabled={!canExpand}
+					onClick={() => canExpand && onToggleExpand(item.id)}
+					className={cn(
+						'flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left transition',
+						canExpand ? 'active:bg-slate-50/80' : 'cursor-default',
+					)}
+					aria-expanded={canExpand ? expanded : undefined}>
+					<div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-2xl">
+						{item.emoji}
+					</div>
+					<div className="min-w-0 flex-1">
+						<div className="flex items-start gap-1">
+							<div className="min-w-0 flex-1">
+								<div className="text-sm font-bold leading-tight text-slate-900">{item.name}</div>
+								<div className={cn('mt-0.5 text-sm font-semibold', brand.text)}>
+									{rub(item.priceRub)}
+								</div>
+							</div>
+							{canExpand ? (
+								<div className="flex items-center self-center">
+									<ChevronDown
+										className={cn(
+											'shrink-0 block text-slate-400 transition-transform duration-300 ease-out motion-reduce:transition-none',
+											expanded && '-rotate-180',
+										)}
+									/>
+								</div>
+							) : null}
+						</div>
+					</div>
+				</button>
+
+				<div
+					className="shrink-0"
+					onClick={(e) => e.stopPropagation()}
+					onKeyDown={(e) => e.stopPropagation()}>
+					{line ? (
+						<div className="inline-flex items-center rounded-2xl bg-slate-100 ring-1 ring-slate-200/80">
+							<button
+								type="button"
+								className="h-10 w-10 rounded-2xl text-lg text-slate-700 transition hover:bg-white/80"
+								onClick={() => onDec(item.id)}
+								aria-label="Меньше">
+								−
+							</button>
+							<div className="w-7 text-center text-xs font-bold text-slate-900">{line.qty}</div>
+							<button
+								type="button"
+								className="h-10 w-10 rounded-2xl text-lg text-slate-700 transition hover:bg-white/80"
+								onClick={() => onInc(item.id)}
+								aria-label="Больше">
+								+
+							</button>
+						</div>
+					) : (
+						<button
+							type="button"
+							disabled={item.isAvailable === false}
+							onClick={() => onAdd(item.id)}
+							className={cn(
+								'flex h-11 w-11 items-center justify-center rounded-full text-xl font-semibold text-white shadow-md transition disabled:opacity-40',
+								brand.bg,
+								brand.bgHover,
+							)}
+							aria-label="В корзину">
+							+
+						</button>
+					)}
+				</div>
+			</div>
+
+			<MenuItemDetailsPanel item={item} open={expanded && canExpand} />
+		</article>
+	);
+});
+
+const DesktopMenuItemCard = memo(function DesktopMenuItemCard({
+	item,
+	line,
+	expanded,
+	canExpand,
+	onToggleExpand,
+	onAdd,
+	onDec,
+	onInc,
+}: {
+	item: MenuItem;
+	line?: CartLine;
+	expanded: boolean;
+	canExpand: boolean;
+	onToggleExpand: (itemId: string) => void;
+	onAdd: (itemId: string) => void;
+	onDec: (itemId: string) => void;
+	onInc: (itemId: string) => void;
+}) {
+	return (
+		<article className="overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm transition hover:shadow-md [content-visibility:auto] [contain-intrinsic-size:420px]">
+			<div className="p-4">
+				<div className="relative overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200">
+					<button
+						type="button"
+						disabled={!canExpand}
+						onClick={() => canExpand && onToggleExpand(item.id)}
+						className={cn(
+							'relative block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#637cf0]/40',
+							canExpand && 'cursor-pointer',
+						)}
+						aria-expanded={canExpand ? expanded : undefined}
+						aria-label={
+							canExpand ? (expanded ? 'Скрыть описание' : 'Показать описание и состав') : undefined
+						}>
+						<div
+							className="aspect-square w-full"
+							style={{
+								background: `radial-gradient(70% 70% at 50% 35%, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%), linear-gradient(135deg, ${item.image.a}, ${item.image.b})`,
+							}}
+							aria-hidden
+						/>
+						<div className="absolute bottom-2 left-2 flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-xl shadow-sm">
+							{item.emoji}
+						</div>
+						{item.tags.includes('hit') ? (
+							<div className="absolute right-3 top-3 rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200">
+								Хит
+							</div>
+						) : null}
+					</button>
+				</div>
+
+				<button
+					type="button"
+					disabled={!canExpand}
+					onClick={() => canExpand && onToggleExpand(item.id)}
+					className={cn(
+						'mt-3 flex w-full items-start justify-between gap-2 rounded-lg text-left transition hover:bg-slate-50/80',
+						!canExpand && 'cursor-default hover:bg-transparent',
+					)}
+					aria-expanded={canExpand ? expanded : undefined}>
+					<span className="text-sm font-bold text-slate-900">{item.name}</span>
+					{canExpand ? (
+						<ChevronDown
+							className={cn(
+								'shrink-0 text-slate-400 transition-transform duration-300 ease-out motion-reduce:transition-none',
+								expanded && 'rotate-180',
+							)}
+						/>
+					) : null}
+				</button>
+			</div>
+
+			<MenuItemDetailsPanel item={item} open={expanded && canExpand} />
+
+			<div className="flex items-center justify-between gap-3 px-4 pb-4 pt-0">
+				<div className={cn('text-sm font-bold', brand.text)}>{rub(item.priceRub)}</div>
+
+				{line ? (
+					<div className="inline-flex items-center rounded-2xl bg-slate-50 ring-1 ring-slate-200">
+						<button
+							type="button"
+							className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-white"
+							onClick={(e) => {
+								e.stopPropagation();
+								onDec(item.id);
+							}}
+							aria-label="Уменьшить">
+							−
+						</button>
+						<div className="w-8 text-center text-xs font-bold text-slate-900">{line.qty}</div>
+						<button
+							type="button"
+							className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-white"
+							onClick={(e) => {
+								e.stopPropagation();
+								onInc(item.id);
+							}}
+							aria-label="Увеличить">
+							+
+						</button>
+					</div>
+				) : (
+					<Button
+						size="sm"
+						onClick={(e) => {
+							e.stopPropagation();
+							onAdd(item.id);
+						}}
+						disabled={item.isAvailable === false}
+						className={cn('rounded-2xl text-white shadow-sm', brand.bg, brand.bgHover)}>
+						+ Выбрать
+					</Button>
+				)}
+			</div>
+
+			{item.isAvailable === false ? (
+				<div className="px-4 pb-3 text-xs text-slate-500">Нет в наличии</div>
+			) : null}
+		</article>
+	);
+});
+
 export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: string }) {
 	const [cart, setCart] = useState<CartLine[]>([]);
 	const [cartOpen, setCartOpen] = useState(false);
@@ -191,9 +415,12 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 		return m;
 	}, [cafe.categories]);
 
+	const deferredQuery = useDeferredValue(query);
+	const deferredIngredient = useDeferredValue(ingredient);
+
 	const filteredCafe = useMemo(() => {
-		const q = norm(query);
-		const iQ = norm(ingredient);
+		const q = norm(deferredQuery);
+		const iQ = norm(deferredIngredient);
 		const min = Number(priceMin);
 		const max = Number(priceMax);
 		const hasMin = priceMin.trim() !== '' && Number.isFinite(min);
@@ -218,14 +445,14 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 			if (items.length) outCats.push({ ...cat, items });
 		}
 		return { ...cafe, categories: outCats };
-	}, [cafe, ingredient, priceMax, priceMin, query, tagHit, tagSpicy, tagVegan]);
+	}, [cafe, deferredIngredient, deferredQuery, priceMax, priceMin, tagHit, tagSpicy, tagVegan]);
 
 	const cartCount = cart.reduce((acc, l) => acc + l.qty, 0);
 	const totalRub = cart.reduce((acc, l) => acc + l.priceRub * l.qty, 0);
 	const cartByItemId = useMemo(() => new Map(cart.map((l) => [l.itemId, l] as const)), [cart]);
 	const anyFilter =
-		!!norm(query) ||
-		!!norm(ingredient) ||
+		!!norm(deferredQuery) ||
+		!!norm(deferredIngredient) ||
 		priceMin.trim() !== '' ||
 		priceMax.trim() !== '' ||
 		tagHit ||
@@ -241,43 +468,49 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 		return catsForUi.filter((c) => c.id === displayTab);
 	}, [catsForUi, displayTab]);
 
-	function toggleMenuItemExpand(itemId: string) {
+	const toggleMenuItemExpand = useCallback((itemId: string) => {
 		setExpandedMenuIds((prev) => {
 			const next = new Set(prev);
 			if (next.has(itemId)) next.delete(itemId);
 			else next.add(itemId);
 			return next;
 		});
-	}
+	}, []);
 
-	function addItem(itemId: string) {
-		const item = itemIndex.get(itemId);
-		if (!item || item.isAvailable === false) return;
-		setCart((prev) => {
-			const existing = prev.find((l) => l.itemId === itemId);
-			if (existing) {
-				return prev.map((l) => (l.itemId === itemId ? { ...l, qty: l.qty + 1 } : l));
-			}
-			return [
-				...prev,
-				{ itemId, name: item.name, emoji: item.emoji, priceRub: item.priceRub, qty: 1 },
-			];
-		});
-	}
+	const addItem = useCallback(
+		(itemId: string) => {
+			const item = itemIndex.get(itemId);
+			if (!item || item.isAvailable === false) return;
+			setCart((prev) => {
+				const existing = prev.find((l) => l.itemId === itemId);
+				if (existing) {
+					return prev.map((l) => (l.itemId === itemId ? { ...l, qty: l.qty + 1 } : l));
+				}
+				return [
+					...prev,
+					{ itemId, name: item.name, emoji: item.emoji, priceRub: item.priceRub, qty: 1 },
+				];
+			});
+		},
+		[itemIndex],
+	);
 
-	function decItem(itemId: string) {
+	const decItem = useCallback((itemId: string) => {
 		setCart((prev) =>
 			prev
 				.map((l) => (l.itemId === itemId ? { ...l, qty: l.qty - 1 } : l))
 				.filter((l) => l.qty > 0),
 		);
-	}
+	}, []);
 
-	function incItem(itemId: string) {
-		const item = itemIndex.get(itemId);
-		if (!item || item.isAvailable === false) return;
-		setCart((prev) => prev.map((l) => (l.itemId === itemId ? { ...l, qty: l.qty + 1 } : l)));
-	}
+	const incItem = useCallback(
+		(itemId: string) => {
+			const item = itemIndex.get(itemId);
+			if (!item || item.isAvailable === false) return;
+			setCart((prev) => prev.map((l) => (l.itemId === itemId ? { ...l, qty: l.qty + 1 } : l)));
+		},
+		[itemIndex],
+	);
 
 	function reset() {
 		setCart([]);
@@ -515,96 +748,28 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 					<section className="space-y-4 lg:space-y-6">
 						{/* Мобильный компактный список */}
 						<div className="space-y-2 lg:hidden">
-							{visibleCats
-								.flatMap((c) => c.items)
-								.map((item) => {
-									const line = cartByItemId.get(item.id);
-									const expanded = expandedMenuIds.has(item.id);
-									const canExpand = menuItemHasDetails(item);
-									return (
-										<article
-											key={item.id}
-											className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/90 shadow-sm [content-visibility:auto] [contain-intrinsic-size:120px]">
-											<div className="flex items-center gap-3 p-3">
-												<button
-													type="button"
-													disabled={!canExpand}
-													onClick={() => canExpand && toggleMenuItemExpand(item.id)}
-													className={cn(
-														'flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left transition',
-														canExpand ? 'active:bg-slate-50/80' : 'cursor-default',
-													)}
-													aria-expanded={canExpand ? expanded : undefined}>
-													<div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-2xl">
-														{item.emoji}
-													</div>
-													<div className="min-w-0 flex-1">
-														<div className="flex items-start gap-1">
-															<div className="min-w-0 flex-1">
-																<div className="text-sm font-bold leading-tight text-slate-900">
-																	{item.name}
-																</div>
-																<div className={cn('mt-0.5 text-sm font-semibold', brand.text)}>
-																	{rub(item.priceRub)}
-																</div>
-															</div>
-															{canExpand ? (
-																<div className="flex items-center self-center">
-																	<ChevronDown
-																		className={cn(
-																			'shrink-0 block text-slate-400 transition-transform duration-300 ease-out motion-reduce:transition-none',
-																			expanded && '-rotate-180',
-																		)}
-																	/>
-																</div>
-															) : null}
-														</div>
-													</div>
-												</button>
-												<div
-													className="shrink-0"
-													onClick={(e) => e.stopPropagation()}
-													onKeyDown={(e) => e.stopPropagation()}>
-													{line ? (
-														<div className="inline-flex items-center rounded-2xl bg-slate-100 ring-1 ring-slate-200/80">
-															<button
-																type="button"
-																className="h-10 w-10 rounded-2xl text-lg text-slate-700 transition hover:bg-white/80"
-																onClick={() => decItem(item.id)}
-																aria-label="Меньше">
-																−
-															</button>
-															<div className="w-7 text-center text-xs font-bold text-slate-900">
-																{line.qty}
-															</div>
-															<button
-																type="button"
-																className="h-10 w-10 rounded-2xl text-lg text-slate-700 transition hover:bg-white/80"
-																onClick={() => incItem(item.id)}
-																aria-label="Больше">
-																+
-															</button>
-														</div>
-													) : (
-														<button
-															type="button"
-															disabled={item.isAvailable === false}
-															onClick={() => addItem(item.id)}
-															className={cn(
-																'flex h-11 w-11 items-center justify-center rounded-full text-xl font-semibold text-white shadow-md transition disabled:opacity-40',
-																brand.bg,
-																brand.bgHover,
-															)}
-															aria-label="В корзину">
-															+
-														</button>
-													)}
-												</div>
-											</div>
-											<MenuItemDetailsPanel item={item} open={expanded && canExpand} />
-										</article>
-									);
-								})}
+							{visibleCats.map((cat) => (
+								<Fragment key={cat.id}>
+									{cat.items.map((item) => {
+										const line = cartByItemId.get(item.id);
+										const expanded = expandedMenuIds.has(item.id);
+										const canExpand = menuItemHasDetails(item);
+										return (
+											<MobileMenuItemRow
+												key={item.id}
+												item={item}
+												line={line}
+												expanded={expanded}
+												canExpand={canExpand}
+												onToggleExpand={toggleMenuItemExpand}
+												onAdd={addItem}
+												onDec={decItem}
+												onInc={incItem}
+											/>
+										);
+									})}
+								</Fragment>
+							))}
 						</div>
 
 						{/* Десктоп: секции и сетка */}
@@ -626,121 +791,17 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 											const expanded = expandedMenuIds.has(item.id);
 											const canExpand = menuItemHasDetails(item);
 											return (
-												<article
+												<DesktopMenuItemCard
 													key={item.id}
-													className="overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm transition hover:shadow-md [content-visibility:auto] [contain-intrinsic-size:420px]">
-													<div className="p-4">
-														<div className="relative overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200">
-															<button
-																type="button"
-																disabled={!canExpand}
-																onClick={() => canExpand && toggleMenuItemExpand(item.id)}
-																className={cn(
-																	'relative block w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#637cf0]/40',
-																	canExpand && 'cursor-pointer',
-																)}
-																aria-expanded={canExpand ? expanded : undefined}
-																aria-label={
-																	canExpand
-																		? expanded
-																			? 'Скрыть описание'
-																			: 'Показать описание и состав'
-																		: undefined
-																}>
-																<div
-																	className="aspect-square w-full"
-																	style={{
-																		background: `radial-gradient(70% 70% at 50% 35%, rgba(255,255,255,0.55), rgba(255,255,255,0) 60%), linear-gradient(135deg, ${item.image.a}, ${item.image.b})`,
-																	}}
-																	aria-hidden
-																/>
-																<div className="absolute bottom-2 left-2 flex h-10 w-10 items-center justify-center rounded-xl bg-white/90 text-xl shadow-sm">
-																	{item.emoji}
-																</div>
-																{item.tags.includes('hit') ? (
-																	<div className="absolute right-3 top-3 rounded-full bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200">
-																		Хит
-																	</div>
-																) : null}
-															</button>
-														</div>
-
-														<button
-															type="button"
-															disabled={!canExpand}
-															onClick={() => canExpand && toggleMenuItemExpand(item.id)}
-															className={cn(
-																'mt-3 flex w-full items-start justify-between gap-2 rounded-lg text-left transition hover:bg-slate-50/80',
-																!canExpand && 'cursor-default hover:bg-transparent',
-															)}
-															aria-expanded={canExpand ? expanded : undefined}>
-															<span className="text-sm font-bold text-slate-900">{item.name}</span>
-															{canExpand ? (
-																<ChevronDown
-																	className={cn(
-																		'shrink-0 text-slate-400 transition-transform duration-300 ease-out motion-reduce:transition-none',
-																		expanded && 'rotate-180',
-																	)}
-																/>
-															) : null}
-														</button>
-													</div>
-
-													<MenuItemDetailsPanel item={item} open={expanded && canExpand} />
-
-													<div className="flex items-center justify-between gap-3 px-4 pb-4 pt-0">
-														<div className={cn('text-sm font-bold', brand.text)}>
-															{rub(item.priceRub)}
-														</div>
-
-														{line ? (
-															<div className="inline-flex items-center rounded-2xl bg-slate-50 ring-1 ring-slate-200">
-																<button
-																	type="button"
-																	className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-white"
-																	onClick={(e) => {
-																		e.stopPropagation();
-																		decItem(item.id);
-																	}}
-																	aria-label="Уменьшить">
-																	−
-																</button>
-																<div className="w-8 text-center text-xs font-bold text-slate-900">
-																	{line.qty}
-																</div>
-																<button
-																	type="button"
-																	className="h-9 w-9 rounded-2xl text-slate-700 transition hover:bg-white"
-																	onClick={(e) => {
-																		e.stopPropagation();
-																		incItem(item.id);
-																	}}
-																	aria-label="Увеличить">
-																	+
-																</button>
-															</div>
-														) : (
-															<Button
-																size="sm"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	addItem(item.id);
-																}}
-																disabled={item.isAvailable === false}
-																className={cn(
-																	'rounded-2xl text-white shadow-sm',
-																	brand.bg,
-																	brand.bgHover,
-																)}>
-																+ Выбрать
-															</Button>
-														)}
-													</div>
-
-													{item.isAvailable === false ? (
-														<div className="px-4 pb-3 text-xs text-slate-500">Нет в наличии</div>
-													) : null}
-												</article>
+													item={item}
+													line={line}
+													expanded={expanded}
+													canExpand={canExpand}
+													onToggleExpand={toggleMenuItemExpand}
+													onAdd={addItem}
+													onDec={decItem}
+													onInc={incItem}
+												/>
 											);
 										})}
 									</div>
