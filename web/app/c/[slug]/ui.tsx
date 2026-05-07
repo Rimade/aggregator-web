@@ -409,7 +409,7 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 					</div>
 
 					{/* Чипы категорий */}
-					<div className="mt-3 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
+					<div className="mt-3 -mx-4 flex gap-2 overflow-x-auto px-4 py-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
 						<button
 							type="button"
 							onClick={() => setMenuTab('all')}
@@ -548,12 +548,14 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 																</div>
 															</div>
 															{canExpand ? (
-																<ChevronDown
-																	className={cn(
-																		'shrink-0 text-slate-400 transition-transform duration-300 ease-out motion-reduce:transition-none',
-																		expanded && '-rotate-180',
-																	)}
-																/>
+																<div className="flex items-center">
+																	<ChevronDown
+																		className={cn(
+																			'shrink-0 self-center text-slate-400 transition-transform duration-300 ease-out motion-reduce:transition-none',
+																			expanded && '-rotate-180',
+																		)}
+																	/>
+																</div>
 															) : null}
 														</div>
 													</div>
