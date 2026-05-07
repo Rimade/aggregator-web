@@ -222,6 +222,7 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 
 	const cartCount = cart.reduce((acc, l) => acc + l.qty, 0);
 	const totalRub = cart.reduce((acc, l) => acc + l.priceRub * l.qty, 0);
+	const cartByItemId = useMemo(() => new Map(cart.map((l) => [l.itemId, l] as const)), [cart]);
 	const anyFilter =
 		!!norm(query) ||
 		!!norm(ingredient) ||
@@ -517,13 +518,13 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 							{visibleCats
 								.flatMap((c) => c.items)
 								.map((item) => {
-									const line = cart.find((l) => l.itemId === item.id);
+									const line = cartByItemId.get(item.id);
 									const expanded = expandedMenuIds.has(item.id);
 									const canExpand = menuItemHasDetails(item);
 									return (
 										<article
 											key={item.id}
-											className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/90 shadow-sm">
+											className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200/90 shadow-sm [content-visibility:auto] [contain-intrinsic-size:120px]">
 											<div className="flex items-center gap-3 p-3">
 												<button
 													type="button"
@@ -548,10 +549,10 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 																</div>
 															</div>
 															{canExpand ? (
-																<div className="flex items-center">
+																<div className="flex items-center self-center">
 																	<ChevronDown
 																		className={cn(
-																			'shrink-0 self-center text-slate-400 transition-transform duration-300 ease-out motion-reduce:transition-none',
+																			'shrink-0 block text-slate-400 transition-transform duration-300 ease-out motion-reduce:transition-none',
 																			expanded && '-rotate-180',
 																		)}
 																	/>
@@ -621,13 +622,13 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 
 									<div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
 										{cat.items.map((item) => {
-											const line = cart.find((l) => l.itemId === item.id);
+											const line = cartByItemId.get(item.id);
 											const expanded = expandedMenuIds.has(item.id);
 											const canExpand = menuItemHasDetails(item);
 											return (
 												<article
 													key={item.id}
-													className="overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm transition hover:shadow-md">
+													className="overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm transition hover:shadow-md [content-visibility:auto] [contain-intrinsic-size:420px]">
 													<div className="p-4">
 														<div className="relative overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-slate-200">
 															<button
