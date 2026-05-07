@@ -89,7 +89,7 @@ function formatTablePill(label?: string) {
 }
 
 function makeOrderNumber() {
-	return String(Math.floor(100 + Math.random() * 900));
+	return String(Math.floor(1000 + Math.random() * 9000));
 }
 
 function menuItemHasDetails(item: MenuItem) {
@@ -407,6 +407,7 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 		comment: '',
 	}));
 	const [submitted, setSubmitted] = useState<OrderDraft | null>(null);
+	const [submitError, setSubmitError] = useState<string | null>(null);
 
 	// Не трогаем моки: просто подтверждаем, что "бэк" доступен и env подхватились.
 	// Запрос будет виден в DevTools Network. Любые ошибки игнорируем (таблицы/схема могут быть ещё не настроены).
@@ -538,11 +539,14 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 
 	function submitOrder() {
 		if (!cart.length) return;
+		setSubmitError(null);
+
+		const orderNumber = makeOrderNumber();
 		const order: OrderDraft = {
 			id: crypto.randomUUID(),
 			cafeName: cafe.name,
 			createdAtIso: new Date().toISOString(),
-			orderNumber: makeOrderNumber(),
+			orderNumber,
 			type: 'dine_in',
 			tableLabel,
 			comment: draft.comment.trim() || undefined,
@@ -551,10 +555,66 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 			payment: 'pay_on_site',
 			status: 'new',
 		};
-		setSubmitted(order);
-		setCart([]);
-		setCartOpen(false);
-		setStep('success');
+
+		const sb = getSupabaseClient();
+		const demoCafeId = process.env.NEXT_PUBLIC_DEMO_CAFE_ID;
+		const cafeIdForInsert = cafe.slug === 'demo' ? demoCafeId : undefined;
+
+		// Если Supabase/env не настроены — остаёмся в мок-режиме.
+		if (!sb || !cafeIdForInsert) {
+			setSubmitted(order);
+			setCart([]);
+			setCartOpen(false);
+			setStep('success');
+			return;
+		}
+
+		void (async () => {
+			try {
+				const createdAtIso = new Date().toISOString();
+				const { data: created, error: orderErr } = await sb
+					.from('orders')
+					.insert({
+						cafe_id: cafeIdForInsert,
+						order_number: orderNumber,
+						type: 'dine_in',
+						table_label: tableLabel ?? null,
+						comment: order.comment ?? null,
+						status: 'new',
+						total_rub: totalRub,
+						created_at: createdAtIso,
+					})
+					.select('id')
+					.single();
+
+				if (orderErr) throw orderErr;
+				if (!created?.id) throw new Error('Order insert failed');
+
+				const items = cart.map((l) => ({
+					order_id: created.id,
+					cafe_id: cafeIdForInsert,
+					menu_item_id: null,
+					name_snapshot: l.name,
+					price_snapshot_rub: l.priceRub,
+					qty: l.qty,
+				}));
+
+				const { error: itemsErr } = await sb.from('order_items').insert(items);
+				if (itemsErr) throw itemsErr;
+
+				setSubmitted({ ...order, createdAtIso });
+				setCart([]);
+				setCartOpen(false);
+				setStep('success');
+			} catch {
+				setSubmitError('Не удалось отправить заказ. Проверь Supabase env и политики доступа.');
+				// fallback: сохраняем UX успеха, но не скрываем, что бэк не записал
+				setSubmitted(order);
+				setCart([]);
+				setCartOpen(false);
+				setStep('success');
+			}
+		})();
 	}
 
 	const tablePill = formatTablePill(tableLabel);
@@ -1145,6 +1205,13 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 			</Sheet>
 
 			{step === 'success' && submitted ? <SuccessModal order={submitted} onClose={reset} /> : null}
+			{step === 'success' && submitError ? (
+				<div className="fixed inset-x-0 bottom-0 z-60 mx-auto w-full max-w-md p-4">
+					<div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200 shadow-lg">
+						{submitError}
+					</div>
+				</div>
+			) : null}
 		</div>
 	);
 }

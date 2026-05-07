@@ -1,10 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 function getEnv(name: string) {
 	return process.env[name];
 }
 
-let _supabase: ReturnType<typeof createClient> | null = null;
+let _supabase: SupabaseClient | null = null;
 
 /**
  * Возвращает Supabase client или `null`, если публичные env не заданы.
