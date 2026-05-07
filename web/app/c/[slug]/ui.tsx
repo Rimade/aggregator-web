@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Fragment, memo, useCallback, useDeferredValue, useMemo, useState } from 'react';
+import { Fragment, memo, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Chip } from '@/components/ui/chip';
 import { Input } from '@/components/ui/input';
 import { Sheet } from '@/components/ui/sheet';
 import { cn } from '@/components/ui/ui';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 /** Акцент как в макетах (СБП / доставки) */
 const brand = {
@@ -406,6 +407,21 @@ export function CafeMenuClient({ cafe, tableLabel }: { cafe: Cafe; tableLabel?: 
 		comment: '',
 	}));
 	const [submitted, setSubmitted] = useState<OrderDraft | null>(null);
+
+	// Не трогаем моки: просто подтверждаем, что "бэк" доступен и env подхватились.
+	// Запрос будет виден в DevTools Network. Любые ошибки игнорируем (таблицы/схема могут быть ещё не настроены).
+	useEffect(() => {
+		const sb = getSupabaseClient();
+		if (!sb) return;
+
+		void (async () => {
+			try {
+				await sb.from('cafes').select('id', { count: 'exact', head: true });
+			} catch {
+				// no-op: мок-режим остаётся основным
+			}
+		})();
+	}, []);
 
 	const itemIndex = useMemo(() => {
 		const m = new Map<string, MenuItem>();

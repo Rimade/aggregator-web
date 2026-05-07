@@ -1,17 +1,25 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from '@supabase/supabase-js';
 
-function getRequiredEnv(name: string) {
-  const v = process.env[name];
-  if (!v) {
-    throw new Error(
-      `Missing ${name}. Create web/.env.local from web/.env.local.example`,
-    );
-  }
-  return v;
+function getEnv(name: string) {
+	return process.env[name];
 }
 
-export const supabase = createClient(
-  getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
-);
+let _supabase: ReturnType<typeof createClient> | null = null;
 
+/**
+ * Возвращает Supabase client или `null`, если публичные env не заданы.
+ * Это позволяет держать мок-режим без падения приложения.
+ */
+export function getSupabaseClient() {
+	if (_supabase) return _supabase;
+
+	const url = getEnv('NEXT_PUBLIC_SUPABASE_URL');
+	const anonKey = getEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+	if (!url || !anonKey) return null;
+
+	_supabase = createClient(url, anonKey);
+	return _supabase;
+}
+
+/** Совместимость: прямой экспорт клиента (может быть `null`). */
+export const supabase = getSupabaseClient();
